@@ -1,29 +1,36 @@
-"use client"
+"use client";
 
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-import { BarChart as TremorBarChart } from "@tremor/react"
-import { LineChart as TremorLineChart } from "@tremor/react"
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { BarChart as TremorBarChart } from "@tremor/react";
+import { LineChart as TremorLineChart } from "@tremor/react";
 
 interface ChartProps {
-  data: any[]
-  index: string
-  categories: string[]
-  colors: string[]
-  valueFormatter?: (value: number) => string
-  className?: string
+  data: any[];
+  index: string;
+  categories: string[];
+  colors: string[];
+  valueFormatter?: (value: number) => string;
+  className?: string;
 }
 
-export function BarChart({ data, index, categories, colors, valueFormatter, className }: ChartProps) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+export function BarChart({
+  data,
+  index,
+  categories,
+  colors,
+  valueFormatter,
+  className,
+}: ChartProps) {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
 
   return (
@@ -36,21 +43,27 @@ export function BarChart({ data, index, categories, colors, valueFormatter, clas
       className={className}
       showLegend={false}
       showGridLines={false}
-      theme={theme === "dark" ? "dark" : "light"}
     />
-  )
+  );
 }
 
-export function LineChart({ data, index, categories, colors, valueFormatter, className }: ChartProps) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+export function LineChart({
+  data,
+  index,
+  categories,
+  colors,
+  valueFormatter,
+  className,
+}: ChartProps) {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
 
   return (
@@ -63,7 +76,6 @@ export function LineChart({ data, index, categories, colors, valueFormatter, cla
       className={className}
       showLegend={false}
       showGridLines={false}
-      theme={theme === "dark" ? "dark" : "light"}
     />
-  )
+  );
 }

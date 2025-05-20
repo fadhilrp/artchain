@@ -1,13 +1,29 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Clock, CheckCircle, XCircle, AlertCircle, Eye, FileText, Download, Users, Shield } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ValidationProgressBadge } from "@/components/validation-progress-badge"
-import { ArtworkValidationStatus } from "@/components/artwork-validation-status"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react";
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Eye,
+  FileText,
+  Download,
+  Users,
+  Shield,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ValidationProgressBadge } from "@/components/validation-progress-badge";
+import { ArtworkValidationStatus } from "@/components/artwork-validation-status";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mock data for user submissions
 const mockSubmissions = [
@@ -18,7 +34,8 @@ const mockSubmissions = [
     status: "verified",
     medium: "Oil on canvas",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "An exploration of color and form inspired by musical rhythms.",
+    description:
+      "An exploration of color and form inspired by musical rhythms.",
     feedback: "Artwork verified. Certificate issued on the blockchain.",
     tokenId: "ART-78392-XYZ",
     transactionHash: "0x8f7d...e4a2",
@@ -40,7 +57,8 @@ const mockSubmissions = [
     status: "pending",
     medium: "Acrylic on canvas",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "A contemporary view of city architecture and human interaction.",
+    description:
+      "A contemporary view of city architecture and human interaction.",
     feedback: null,
     tokenId: null,
     transactionHash: null,
@@ -61,8 +79,10 @@ const mockSubmissions = [
     status: "rejected",
     medium: "Digital Art",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "A digital artwork exploring the intersection of technology and consciousness.",
-    feedback: "Unable to verify originality. Please provide additional documentation of your creative process.",
+    description:
+      "A digital artwork exploring the intersection of technology and consciousness.",
+    feedback:
+      "Unable to verify originality. Please provide additional documentation of your creative process.",
     tokenId: null,
     transactionHash: null,
     validationStatus: {
@@ -98,32 +118,38 @@ const mockSubmissions = [
       consensusDate: "2025-05-05T10:20:00Z",
     },
   },
-]
+];
 
 interface UserArtworkListProps {
-  filter?: "all" | "verified" | "pending" | "rejected"
+  filter?: "all" | "verified" | "pending" | "rejected";
 }
 
 export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
-  const [submissions, setSubmissions] = useState<typeof mockSubmissions>([])
-  const [filteredSubmissions, setFilteredSubmissions] = useState<typeof mockSubmissions>([])
-  const [selectedArtwork, setSelectedArtwork] = useState<(typeof mockSubmissions)[0] | null>(null)
-  const [activeTab, setActiveTab] = useState("details")
+  const [submissions, setSubmissions] = useState<typeof mockSubmissions>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<
+    typeof mockSubmissions
+  >([]);
+  const [selectedArtwork, setSelectedArtwork] = useState<
+    (typeof mockSubmissions)[0] | null
+  >(null);
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
     // Simulate API fetch
     setTimeout(() => {
-      setSubmissions(mockSubmissions)
-    }, 500)
-  }, [])
+      setSubmissions(mockSubmissions);
+    }, 500);
+  }, []);
 
   useEffect(() => {
     if (filter === "all") {
-      setFilteredSubmissions(submissions)
+      setFilteredSubmissions(submissions);
     } else {
-      setFilteredSubmissions(submissions.filter((submission) => submission.status === filter))
+      setFilteredSubmissions(
+        submissions.filter((submission) => submission.status === filter)
+      );
     }
-  }, [submissions, filter])
+  }, [submissions, filter]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -133,39 +159,39 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
             <CheckCircle className="h-3 w-3" />
             Verified
           </Badge>
-        )
+        );
       case "pending":
         return (
           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 flex items-center gap-1">
             <Clock className="h-3 w-3" />
             Pending
           </Badge>
-        )
+        );
       case "rejected":
         return (
           <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 flex items-center gap-1">
             <XCircle className="h-3 w-3" />
             Rejected
           </Badge>
-        )
+        );
       default:
         return (
           <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
             Unknown
           </Badge>
-        )
+        );
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -173,15 +199,15 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
       .map((part) => part[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2)
-  }
+      .substring(0, 2);
+  };
 
   if (submissions.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
         <p className="text-gray-500">Loading your submissions...</p>
       </div>
-    )
+    );
   }
 
   if (filteredSubmissions.length === 0) {
@@ -189,7 +215,7 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
       <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
         <p className="text-gray-500">No artwork found with this status.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -211,7 +237,13 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
                 <ValidationProgressBadge
                   completed={submission.validationStatus.completed}
                   required={submission.validationStatus.required}
-                  status={submission.validationStatus.status}
+                  status={
+                    submission.validationStatus.status as
+                      | "pending"
+                      | "in_progress"
+                      | "approved"
+                      | "rejected"
+                  }
                 />
               ) : (
                 getStatusBadge(submission.status)
@@ -222,27 +254,34 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
                 <div className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
                   <span className="text-xs">
-                    {submission.validationStatus.completed}/{submission.validationStatus.required} Validators
+                    {submission.validationStatus.completed}/
+                    {submission.validationStatus.required} Validators
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs">{submission.validationStatus.approved} Approve</span>
+                  <span className="text-xs">
+                    {submission.validationStatus.approved} Approve
+                  </span>
                   <span className="text-xs mx-1">•</span>
-                  <span className="text-xs">{submission.validationStatus.rejected} Reject</span>
+                  <span className="text-xs">
+                    {submission.validationStatus.rejected} Reject
+                  </span>
                 </div>
               </div>
             )}
           </div>
           <div className="p-4">
             <h3 className="font-medium truncate">{submission.title}</h3>
-            <p className="text-sm text-gray-500">Submitted: {formatDate(submission.dateSubmitted)}</p>
+            <p className="text-sm text-gray-500">
+              Submitted: {formatDate(submission.dateSubmitted)}
+            </p>
             <Button
               variant="outline"
               size="sm"
               className="w-full mt-3"
               onClick={(e) => {
-                e.stopPropagation()
-                setSelectedArtwork(submission)
+                e.stopPropagation();
+                setSelectedArtwork(submission);
               }}
             >
               <Eye className="h-4 w-4 mr-2" />
@@ -252,13 +291,18 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
         </div>
       ))}
 
-      <Dialog open={!!selectedArtwork} onOpenChange={(open) => !open && setSelectedArtwork(null)}>
+      <Dialog
+        open={!!selectedArtwork}
+        onOpenChange={(open) => !open && setSelectedArtwork(null)}
+      >
         <DialogContent className="max-w-3xl">
           {selectedArtwork && (
             <>
               <DialogHeader>
                 <DialogTitle>{selectedArtwork.title}</DialogTitle>
-                <DialogDescription>Submitted on {formatDate(selectedArtwork.dateSubmitted)}</DialogDescription>
+                <DialogDescription>
+                  Submitted on {formatDate(selectedArtwork.dateSubmitted)}
+                </DialogDescription>
               </DialogHeader>
 
               <Tabs defaultValue="details">
@@ -284,9 +328,17 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
                         <h4 className="text-sm font-medium mb-1">Status</h4>
                         {selectedArtwork.validationStatus ? (
                           <ValidationProgressBadge
-                            completed={selectedArtwork.validationStatus.completed}
+                            completed={
+                              selectedArtwork.validationStatus.completed
+                            }
                             required={selectedArtwork.validationStatus.required}
-                            status={selectedArtwork.validationStatus.status}
+                            status={
+                              selectedArtwork.validationStatus.status as
+                                | "pending"
+                                | "in_progress"
+                                | "approved"
+                                | "rejected"
+                            }
                           />
                         ) : (
                           getStatusBadge(selectedArtwork.status)
@@ -295,37 +347,47 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
 
                       <div>
                         <h4 className="text-sm font-medium mb-1">Medium</h4>
-                        <p className="text-sm text-gray-500">{selectedArtwork.medium}</p>
+                        <p className="text-sm text-gray-500">
+                          {selectedArtwork.medium}
+                        </p>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium mb-1">Description</h4>
-                        <p className="text-sm text-gray-500">{selectedArtwork.description}</p>
+                        <h4 className="text-sm font-medium mb-1">
+                          Description
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {selectedArtwork.description}
+                        </p>
                       </div>
-
-                      {selectedArtwork.additionalInfo && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Additional Information</h4>
-                          <p className="text-sm text-gray-500">{selectedArtwork.additionalInfo}</p>
-                        </div>
-                      )}
 
                       {selectedArtwork.feedback && (
                         <div>
-                          <h4 className="text-sm font-medium mb-1">Validator Feedback</h4>
-                          <p className="text-sm text-gray-500">{selectedArtwork.feedback}</p>
+                          <h4 className="text-sm font-medium mb-1">
+                            Validator Feedback
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {selectedArtwork.feedback}
+                          </p>
                         </div>
                       )}
 
                       {selectedArtwork.status === "verified" && (
                         <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Blockchain Information</h4>
+                          <h4 className="text-sm font-medium">
+                            Blockchain Information
+                          </h4>
                           <div className="text-sm text-gray-500 space-y-1">
                             <p>Token ID: {selectedArtwork.tokenId}</p>
-                            <p>Transaction: {selectedArtwork.transactionHash}</p>
+                            <p>
+                              Transaction: {selectedArtwork.transactionHash}
+                            </p>
                           </div>
                           <div className="flex space-x-2 mt-4">
-                            <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
+                            <Button
+                              size="sm"
+                              className="bg-teal-600 hover:bg-teal-700"
+                            >
                               <FileText className="h-4 w-4 mr-2" />
                               View Certificate
                             </Button>
@@ -344,7 +406,19 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
                   {selectedArtwork.validationStatus && (
                     <ArtworkValidationStatus
                       artworkId={selectedArtwork.id}
-                      validationStatus={selectedArtwork.validationStatus}
+                      validationStatus={
+                        selectedArtwork.validationStatus
+                          ? {
+                              ...selectedArtwork.validationStatus,
+                              status: selectedArtwork.validationStatus
+                                .status as
+                                | "approved"
+                                | "pending"
+                                | "in_progress"
+                                | "rejected",
+                            }
+                          : undefined
+                      }
                     />
                   )}
                 </TabsContent>
@@ -354,5 +428,5 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

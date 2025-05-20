@@ -22,19 +22,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ThirdwebProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="min-h-screen flex flex-col">
-              <AppHeader />
-              <main className="flex-1 bg-gray-50 dark:bg-gray-900">
-                {children}
-              </main>
-            </div>
-          </ThemeProvider>
+          <div className="min-h-screen flex flex-col">
+            <AppHeader />
+            <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+              {children}
+            </main>
+          </div>
         </ThirdwebProvider>
       </body>
     </html>
