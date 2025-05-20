@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserDashboard } from "@/components/user-dashboard"
-import { ValidatorDashboard } from "@/components/validator-dashboard"
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserDashboard } from "@/components/user-dashboard";
+import { ValidatorDashboard } from "@/components/validator-dashboard";
 
 export default function AppPage() {
-  const [activeTab, setActiveTab] = useState("user")
+  const [activeTab, setActiveTab] = useState("user");
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then(setUsers);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -25,5 +32,5 @@ export default function AppPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
