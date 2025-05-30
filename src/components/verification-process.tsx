@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,37 +8,48 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CheckCircle, XCircle, AlertTriangle, Sparkles, ArrowRight, Users } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
-import { AIValidationResults } from "@/components/ai-validation-results"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import type { ValidationStatus, Validator } from "@/lib/types/validation"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Sparkles,
+  ArrowRight,
+  Users,
+} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { AIValidationResults } from "@/components/ai-validation-results";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import type { ValidationStatus, Validator } from "@/lib/types/validation";
 
 interface VerificationProcessProps {
   artwork: {
-    id: string
-    title: string
-    artist: string
-    dateSubmitted: string
-    status: string
-    medium: string
-    images: string[]
-    description: string
-    additionalInfo?: string
-    validationStatus?: ValidationStatus
-  }
-  isOpen: boolean
-  onClose: () => void
-  onComplete: (artworkId: string, isApproved: boolean, feedback: string) => void
-  totalSelected: number
-  currentIndex: number
+    id: string;
+    title: string;
+    artist: string;
+    dateSubmitted: string;
+    status: string;
+    medium: string;
+    images: string[];
+    description: string;
+    additionalInfo?: string;
+    validationStatus?: ValidationStatus;
+  };
+  isOpen: boolean;
+  onClose: () => void;
+  onComplete: (
+    artworkId: string,
+    isApproved: boolean,
+    feedback: string
+  ) => void;
+  totalSelected: number;
+  currentIndex: number;
 }
 
 export function VerificationProcess({
@@ -49,12 +60,16 @@ export function VerificationProcess({
   totalSelected,
   currentIndex,
 }: VerificationProcessProps) {
-  const [step, setStep] = useState<"analyzing" | "results" | "decision">("analyzing")
-  const [validationDecision, setValidationDecision] = useState<"approve" | "reject" | null>(null)
-  const [feedback, setFeedback] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [analysisProgress, setAnalysisProgress] = useState(0)
-  const [activeTab, setActiveTab] = useState("artwork")
+  const [step, setStep] = useState<"analyzing" | "results" | "decision">(
+    "analyzing"
+  );
+  const [validationDecision, setValidationDecision] = useState<
+    "approve" | "reject" | null
+  >(null);
+  const [feedback, setFeedback] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState("artwork");
 
   // Mock validation status if not provided
   const validationStatus =
@@ -72,63 +87,65 @@ export function VerificationProcess({
           name: `Validator ${i + 1}`,
           decision: Math.random() > 0.3 ? "approve" : "reject",
           feedback: `Feedback from validator ${i + 1}`,
-          timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          timestamp: new Date(
+            Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
           reputation: 70 + Math.floor(Math.random() * 30),
         })),
       consensusReached: false,
-    } as ValidationStatus)
+    } as ValidationStatus);
 
   useEffect(() => {
     // Simulate AI analysis progress
     if (step === "analyzing") {
       const interval = setInterval(() => {
         setAnalysisProgress((prev) => {
-          const newProgress = prev + 5
+          const newProgress = prev + 5;
           if (newProgress >= 100) {
-            clearInterval(interval)
-            setTimeout(() => setStep("results"), 500)
-            return 100
+            clearInterval(interval);
+            setTimeout(() => setStep("results"), 500);
+            return 100;
           }
-          return newProgress
-        })
-      }, 200)
+          return newProgress;
+        });
+      }, 200);
 
-      return () => clearInterval(interval)
+      return () => clearInterval(interval);
     }
-  }, [step])
+  }, [step]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const handleSubmit = () => {
     if (!validationDecision) {
-      alert("Please select whether to approve or reject this artwork")
-      return
+      alert("Please select whether to approve or reject this artwork");
+      return;
     }
 
     if (feedback.trim() === "") {
-      alert("Please provide feedback for the artist")
-      return
+      alert("Please provide feedback for the artist");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     // Simulate API call
     setTimeout(() => {
-      onComplete(artwork.id, validationDecision === "approve", feedback)
-      setIsSubmitting(false)
-      setValidationDecision(null)
-      setFeedback("")
-      setStep("analyzing")
-      setAnalysisProgress(0)
-    }, 1000)
-  }
+      onComplete(artwork.id, validationDecision === "approve", feedback);
+      setIsSubmitting(false);
+      setValidationDecision(null);
+      setFeedback("");
+      setStep("analyzing");
+      setAnalysisProgress(0);
+    }, 1000);
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -136,8 +153,8 @@ export function VerificationProcess({
       .map((part) => part[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2)
-  }
+      .substring(0, 2);
+  };
 
   const renderStepContent = () => {
     switch (step) {
@@ -150,28 +167,34 @@ export function VerificationProcess({
               </div>
             </div>
             <h3 className="text-xl font-bold mb-2">AI Analysis in Progress</h3>
-            <p className="text-gray-500 mb-6">Our AI is analyzing the artwork against millions of existing pieces...</p>
+            <p className="text-gray-500 mb-6">
+              Our AI is analyzing the artwork against millions of existing
+              pieces...
+            </p>
             <div className="max-w-md mx-auto mb-4">
               <Progress value={analysisProgress} className="h-2" />
             </div>
-            <p className="text-sm text-gray-400">This usually takes less than a minute</p>
+            <p className="text-sm text-gray-400">
+              This usually takes less than a minute
+            </p>
           </div>
-        )
+        );
 
       case "results":
         return (
           <div className="py-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="artwork">Artwork Details</TabsTrigger>
                 <TabsTrigger value="ai-results">
                   <Sparkles className="h-4 w-4 mr-2" />
                   AI Analysis
                 </TabsTrigger>
-                <TabsTrigger value="validators">
+                {/* <TabsTrigger value="validators">
                   <Users className="h-4 w-4 mr-2" />
-                  Validators ({validationStatus.completed}/{validationStatus.required})
-                </TabsTrigger>
+                  Validators ({artwork.consensusCount}/
+                  {artwork.requiredValidators})
+                </TabsTrigger> */}
               </TabsList>
 
               <TabsContent value="artwork">
@@ -179,50 +202,65 @@ export function VerificationProcess({
                   <div>
                     <div className="aspect-square rounded-md overflow-hidden border">
                       <img
-                        src={artwork.images[0] || "/placeholder.svg"}
-                        alt={artwork.title}
+                        src={artwork?.images?.[0] || "/placeholder.svg"}
+                        alt={artwork?.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-bold">{artwork.title}</h3>
-                      <p className="text-sm text-gray-500">by {artwork.artist}</p>
+                      <h3 className="text-lg font-bold">{artwork?.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        by {artwork?.artist}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="font-medium">Medium</p>
-                        <p className="text-gray-500">{artwork.medium}</p>
+                        <p className="text-gray-500">{artwork?.medium}</p>
                       </div>
                       <div>
                         <p className="font-medium">Submitted</p>
-                        <p className="text-gray-500">{formatDate(artwork.dateSubmitted)}</p>
+                        <p className="text-gray-500">
+                          {formatDate(artwork?.createdAt)}
+                        </p>
                       </div>
                     </div>
 
                     <div>
                       <p className="font-medium">Description</p>
-                      <p className="text-sm text-gray-500">{artwork.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {artwork?.description}
+                      </p>
                     </div>
 
-                    {artwork.additionalInfo && (
+                    {artwork?.additionalInfo && (
                       <div>
                         <p className="font-medium">Additional Information</p>
-                        <p className="text-sm text-gray-500">{artwork.additionalInfo}</p>
+                        <p className="text-sm text-gray-500">
+                          {artwork.additionalInfo}
+                        </p>
                       </div>
                     )}
 
                     <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-3">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-sm font-medium">Validation Progress</h4>
+                        <h4 className="text-sm font-medium">
+                          Validation Progress
+                        </h4>
                         <span className="text-sm font-medium">
-                          {validationStatus.completed} of {validationStatus.required} validators
+                          {artwork.consensusCount} of{" "}
+                          {artwork.requiredValidators} validators
                         </span>
                       </div>
                       <Progress
-                        value={(validationStatus.completed / validationStatus.required) * 100}
+                        value={
+                          (validationStatus.completed /
+                            validationStatus.required) *
+                          100
+                        }
                         className="h-2"
                       />
                       <div className="flex justify-between text-xs text-gray-500">
@@ -238,16 +276,26 @@ export function VerificationProcess({
                 <AIValidationResults artwork={artwork} />
               </TabsContent>
 
-              <TabsContent value="validators">
+              {/* <TabsContent value="validators">
                 <div className="space-y-4">
                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-sm font-medium">Validation Progress</h4>
+                      <h4 className="text-sm font-medium">
+                        Validation Progress
+                      </h4>
                       <span className="text-sm font-medium">
-                        {validationStatus.completed} of {validationStatus.required} validators
+                        {validationStatus.completed} of{" "}
+                        {validationStatus.required} validators
                       </span>
                     </div>
-                    <Progress value={(validationStatus.completed / validationStatus.required) * 100} className="h-2" />
+                    <Progress
+                      value={
+                        (validationStatus.completed /
+                          validationStatus.required) *
+                        100
+                      }
+                      className="h-2"
+                    />
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>{validationStatus.approved} Approve</span>
                       <span>{validationStatus.rejected} Reject</span>
@@ -258,64 +306,87 @@ export function VerificationProcess({
                     <h4 className="text-sm font-medium">Validator Decisions</h4>
                     {validationStatus.validators.length > 0 ? (
                       <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                        {validationStatus.validators.map((validator: Validator) => (
-                          <div key={validator.id} className="border rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  {validator.avatar && (
-                                    <AvatarImage src={validator.avatar || "/placeholder.svg"} alt={validator.name} />
-                                  )}
-                                  <AvatarFallback>{getInitials(validator.name)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="text-sm font-medium">{validator.name}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {validator.timestamp ? formatDate(validator.timestamp) : ""}
-                                  </p>
+                        {validationStatus.validators.map(
+                          (validator: Validator) => (
+                            <div
+                              key={validator.id}
+                              className="border rounded-lg p-3 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-8 w-8">
+                                    {validator.avatar && (
+                                      <AvatarImage
+                                        src={
+                                          validator.avatar || "/placeholder.svg"
+                                        }
+                                        alt={validator.name}
+                                      />
+                                    )}
+                                    <AvatarFallback>
+                                      {getInitials(validator.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      {validator.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {validator.timestamp
+                                        ? formatDate(validator.timestamp)
+                                        : ""}
+                                    </p>
+                                  </div>
                                 </div>
+                                <Badge
+                                  className={
+                                    validator.decision === "approve"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                  }
+                                >
+                                  {validator.decision === "approve" ? (
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                  )}
+                                  {validator.decision === "approve"
+                                    ? "Approved"
+                                    : "Rejected"}
+                                </Badge>
                               </div>
-                              <Badge
-                                className={
-                                  validator.decision === "approve"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                }
-                              >
-                                {validator.decision === "approve" ? (
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                ) : (
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                )}
-                                {validator.decision === "approve" ? "Approved" : "Rejected"}
-                              </Badge>
+                              {validator.feedback && (
+                                <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                                  "{validator.feedback}"
+                                </div>
+                              )}
                             </div>
-                            {validator.feedback && (
-                              <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                                "{validator.feedback}"
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     ) : (
                       <div className="text-center py-8 border rounded-lg bg-gray-50 dark:bg-gray-900">
-                        <p className="text-gray-500">No validators have reviewed this artwork yet</p>
+                        <p className="text-gray-500">
+                          No validators have reviewed this artwork yet
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
-              </TabsContent>
+              </TabsContent> */}
             </Tabs>
 
             <div className="flex justify-end mt-6">
-              <Button onClick={() => setStep("decision")} className="bg-teal-600 hover:bg-teal-700">
+              <Button
+                onClick={() => setStep("decision")}
+                className="bg-teal-600 hover:bg-teal-700"
+              >
                 Continue to Decision
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
-        )
+        );
 
       case "decision":
         return (
@@ -324,18 +395,25 @@ export function VerificationProcess({
               <div className="flex justify-between items-center">
                 <h4 className="text-sm font-medium">Validation Progress</h4>
                 <span className="text-sm font-medium">
-                  {validationStatus.completed} of {validationStatus.required} validators
+                  {artwork.consensusCount} of {artwork.requiredValidators}{" "}
+                  validators
                 </span>
               </div>
-              <Progress value={(validationStatus.completed / validationStatus.required) * 100} className="h-2" />
+              <Progress
+                value={
+                  (artwork.consensusCount / artwork.requiredValidators) * 100
+                }
+                className="h-2"
+              />
               <div className="flex justify-between text-xs text-gray-500">
                 <span>{validationStatus.approved} Approve</span>
                 <span>{validationStatus.rejected} Reject</span>
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 <AlertTriangle className="h-3 w-3 inline mr-1" />
-                This artwork requires validation from {validationStatus.required} validators before a final decision is
-                made
+                This artwork requires validation from{" "}
+                {validationStatus.required} validators before a final decision
+                is made
               </p>
             </div>
 
@@ -343,27 +421,39 @@ export function VerificationProcess({
 
             <RadioGroup
               value={validationDecision || ""}
-              onValueChange={(value) => setValidationDecision(value as "approve" | "reject")}
+              onValueChange={(value) =>
+                setValidationDecision(value as "approve" | "reject")
+              }
               className="space-y-3"
             >
               <div className="flex items-center space-x-2 rounded-md border p-3 hover:bg-gray-50 dark:hover:bg-gray-900">
                 <RadioGroupItem value="approve" id="approve" />
-                <Label htmlFor="approve" className="flex items-center cursor-pointer">
+                <Label
+                  htmlFor="approve"
+                  className="flex items-center cursor-pointer"
+                >
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <div>
                     <p className="font-medium">Approve</p>
-                    <p className="text-sm text-gray-500">Artwork meets authenticity criteria</p>
+                    <p className="text-sm text-gray-500">
+                      Artwork meets authenticity criteria
+                    </p>
                   </div>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-2 rounded-md border p-3 hover:bg-gray-50 dark:hover:bg-gray-900">
                 <RadioGroupItem value="reject" id="reject" />
-                <Label htmlFor="reject" className="flex items-center cursor-pointer">
+                <Label
+                  htmlFor="reject"
+                  className="flex items-center cursor-pointer"
+                >
                   <XCircle className="h-5 w-5 text-red-500 mr-2" />
                   <div>
                     <p className="font-medium">Reject</p>
-                    <p className="text-sm text-gray-500">Artwork does not meet authenticity criteria</p>
+                    <p className="text-sm text-gray-500">
+                      Artwork does not meet authenticity criteria
+                    </p>
                   </div>
                 </Label>
               </div>
@@ -384,23 +474,21 @@ export function VerificationProcess({
               </p>
             </div>
           </div>
-        )
+        );
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            Verifying Artwork {currentIndex} of {totalSelected}
-          </DialogTitle>
+          <DialogTitle>Verifying Artwork</DialogTitle>
           <DialogDescription>
             {step === "analyzing"
               ? "AI is analyzing the artwork"
               : step === "results"
-                ? "Review AI analysis results"
-                : "Make your validation decision"}
+              ? "Review AI analysis results"
+              : "Make your validation decision"}
           </DialogDescription>
         </DialogHeader>
 
@@ -414,13 +502,15 @@ export function VerificationProcess({
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!validationDecision || feedback.trim() === "" || isSubmitting}
+                disabled={
+                  !validationDecision || feedback.trim() === "" || isSubmitting
+                }
                 className={
                   validationDecision === "approve"
                     ? "bg-green-600 hover:bg-green-700"
                     : validationDecision === "reject"
-                      ? "bg-red-600 hover:bg-red-700"
-                      : ""
+                    ? "bg-red-600 hover:bg-red-700"
+                    : ""
                 }
               >
                 {isSubmitting ? "Submitting..." : "Submit Decision"}
@@ -434,5 +524,5 @@ export function VerificationProcess({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

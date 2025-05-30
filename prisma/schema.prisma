@@ -10,8 +10,8 @@ datasource db {
 model User {
   id            Int     @id @default(autoincrement())
   name          String?
-  email         String? @unique
-  walletAddress String  @unique
+  email         String?   @unique
+  walletAddress String    @unique
 }
 
 model Artwork {
@@ -23,4 +23,15 @@ model Artwork {
   title       String
   metadata    Json
   createdAt   DateTime @default(now())
+}
+model PendingArtwork {
+  id             String   @id @default(uuid())
+  title          String
+  artist         String
+  dateSubmitted  DateTime
+  status         String
+  medium         String
+  images         String[] // Array of image URLs
+  description    String
+  additionalInfo String
 }

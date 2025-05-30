@@ -1,45 +1,54 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SimilarArtwork {
-  id: string
-  title: string
-  artist: string
-  image: string
-  similarityScore: number
-  source: string
+  id: string;
+  title: string;
+  artist: string;
+  image: string;
+  similarityScore: number;
+  source: string;
 }
 
 interface MetadataMatch {
-  field: string
-  submitted: string
-  existing: string
-  match: boolean
+  field: string;
+  submitted: string;
+  existing: string;
+  match: boolean;
 }
 
 interface AIValidationResultsProps {
   artwork: {
-    id: string
-    title: string
-    artist: string
-    images: string[]
-    description: string
-    medium: string
-  }
-  isLoading?: boolean
-  onRequestAIValidation?: () => void
+    id: string;
+    title: string;
+    artist: string;
+    images: string[];
+    description: string;
+    medium: string;
+  };
+  isLoading?: boolean;
+  onRequestAIValidation?: () => void;
 }
 
-export function AIValidationResults({ artwork, isLoading = false, onRequestAIValidation }: AIValidationResultsProps) {
-  const [activeTab, setActiveTab] = useState("similar")
+export function AIValidationResults({
+  artwork,
+  isLoading = false,
+  onRequestAIValidation,
+}: AIValidationResultsProps) {
+  const [activeTab, setActiveTab] = useState("similar");
 
   // Mock data for AI validation results
   const similarArtworks: SimilarArtwork[] = [
@@ -75,7 +84,7 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
       similarityScore: 68,
       source: "Public Registry",
     },
-  ]
+  ];
 
   const metadataMatches: MetadataMatch[] = [
     {
@@ -108,12 +117,41 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
       existing: "2024",
       match: false,
     },
-  ]
+  ];
 
+  const [scores, setScores] = useState({
+    similarity: 0,
+    metadata: 0,
+    overall: 0,
+  });
+
+  useEffect(() => {
+    fetch("http://localhost:3001/ai-vlm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setScores({
+          similarity: data.image_similarity || 0,
+          metadata: data.metadata_similarity || 0,
+          overall: data.confidence || 0,
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching AI validation results:", error);
+      });
+  }, [isLoading]);
   // Calculate overall confidence score based on similarity and metadata matches
-  const similarityConfidence = similarArtworks.length > 0 ? similarArtworks[0].similarityScore : 0
-  const metadataConfidence = (metadataMatches.filter((item) => item.match).length / metadataMatches.length) * 100
-  const overallConfidence = (similarityConfidence + metadataConfidence) / 2
+  const similarityConfidence =
+    similarArtworks.length > 0 ? similarArtworks[0].similarityScore : 0;
+  const metadataConfidence =
+    (metadataMatches.filter((item) => item.match).length /
+      metadataMatches.length) *
+    100;
+  const overallConfidence = (similarityConfidence + metadataConfidence) / 2;
 
   const getConfidenceBadge = (score: number) => {
     if (score >= 90) {
@@ -121,47 +159,54 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
         <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
           <XCircle className="h-3 w-3 mr-1" /> High Risk
         </Badge>
-      )
+      );
     } else if (score >= 75) {
       return (
         <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
           <AlertTriangle className="h-3 w-3 mr-1" /> Medium Risk
         </Badge>
-      )
+      );
     } else if (score >= 50) {
       return (
         <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
           <Info className="h-3 w-3 mr-1" /> Low Risk
         </Badge>
-      )
+      );
     } else {
       return (
         <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
           <CheckCircle className="h-3 w-3 mr-1" /> Very Low Risk
         </Badge>
-      )
+      );
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="border rounded-lg p-6 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
         <p className="text-sm text-gray-500">AI is analyzing the artwork...</p>
-        <p className="text-xs text-gray-400 mt-2">This may take a few moments</p>
+        <p className="text-xs text-gray-400 mt-2">
+          This may take a few moments
+        </p>
       </div>
-    )
+    );
   }
 
   if (!similarArtworks.length && onRequestAIValidation) {
     return (
       <div className="border rounded-lg p-6 text-center">
-        <p className="text-sm text-gray-500 mb-4">No AI validation has been performed yet.</p>
-        <Button onClick={onRequestAIValidation} className="bg-teal-600 hover:bg-teal-700">
+        <p className="text-sm text-gray-500 mb-4">
+          No AI validation has been performed yet.
+        </p>
+        <Button
+          onClick={onRequestAIValidation}
+          className="bg-teal-600 hover:bg-teal-700"
+        >
           Run AI Validation
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -170,33 +215,39 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{Math.round(similarityConfidence)}%</div>
+              <div className="text-2xl font-bold mb-1">
+                {Math.round(scores.similarity)}%
+              </div>
               <p className="text-sm text-gray-500">Image Similarity</p>
-              <Progress className="h-2 mt-2" value={similarityConfidence} />
+              <Progress className="h-2 mt-2" value={scores.similarity} />
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{Math.round(metadataConfidence)}%</div>
+              <div className="text-2xl font-bold mb-1">
+                {Math.round(scores.metadata)}%
+              </div>
               <p className="text-sm text-gray-500">Metadata Match</p>
-              <Progress className="h-2 mt-2" value={metadataConfidence} />
+              <Progress className="h-2 mt-2" value={scores.metadata} />
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold mb-1">{Math.round(overallConfidence)}%</div>
+              <div className="text-2xl font-bold mb-1">
+                {Math.round(scores.overall)}%
+              </div>
               <p className="text-sm text-gray-500">Overall Confidence</p>
-              <div className="mt-2">{getConfidenceBadge(overallConfidence)}</div>
+              <div className="mt-2">{getConfidenceBadge(scores.overall)}</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      {/* <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="similar">Similar Artworks</TabsTrigger>
           <TabsTrigger value="metadata">Metadata Analysis</TabsTrigger>
@@ -263,9 +314,9 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
             </table>
           </div>
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
 
-      <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4">
+      {/* <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4">
         <div className="flex items-start">
           <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
           <div>
@@ -277,7 +328,7 @@ export function AIValidationResults({ artwork, isLoading = false, onRequestAIVal
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
-  )
+  );
 }
