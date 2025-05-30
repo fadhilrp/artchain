@@ -1,15 +1,27 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Clock, Filter, Search, Sparkles } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { VerificationProcess } from "@/components/verification-process"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Clock, Filter, Search, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { VerificationProcess } from "@/components/verification-process";
 
 // Mock data for pending verifications
 const mockPendingArtworks = [
@@ -21,8 +33,10 @@ const mockPendingArtworks = [
     status: "pending",
     medium: "Acrylic on canvas",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "A contemporary view of city architecture and human interaction.",
-    additionalInfo: "Created during my residency in New York. This is part of a series exploring urban environments.",
+    description:
+      "A contemporary view of city architecture and human interaction.",
+    additionalInfo:
+      "Created during my residency in New York. This is part of a series exploring urban environments.",
   },
   {
     id: "art-102",
@@ -44,7 +58,8 @@ const mockPendingArtworks = [
     medium: "Digital Art",
     images: ["/placeholder.svg?height=400&width=400"],
     description: "A commentary on technology's impact on society.",
-    additionalInfo: "Created using a combination of 3D modeling and digital painting techniques.",
+    additionalInfo:
+      "Created using a combination of 3D modeling and digital painting techniques.",
   },
   {
     id: "art-104",
@@ -54,7 +69,8 @@ const mockPendingArtworks = [
     status: "pending",
     medium: "Watercolor",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "A serene forest scene capturing the interplay of light through trees.",
+    description:
+      "A serene forest scene capturing the interplay of light through trees.",
     additionalInfo: "Painted on location in the Pacific Northwest.",
   },
   {
@@ -66,7 +82,8 @@ const mockPendingArtworks = [
     medium: "Digital Art",
     images: ["/placeholder.svg?height=400&width=400"],
     description: "An exploration of geometric shapes and patterns in harmony.",
-    additionalInfo: "Created using custom algorithms and digital painting techniques.",
+    additionalInfo:
+      "Created using custom algorithms and digital painting techniques.",
   },
   {
     id: "art-106",
@@ -76,131 +93,199 @@ const mockPendingArtworks = [
     status: "pending",
     medium: "Oil on canvas",
     images: ["/placeholder.svg?height=400&width=400"],
-    description: "A landscape capturing the vibrant colors of autumn reflected in a still lake.",
+    description:
+      "A landscape capturing the vibrant colors of autumn reflected in a still lake.",
     additionalInfo: "Painted en plein air during a trip to Vermont.",
   },
-]
+];
 
 export default function VerifyQueuePage() {
-  const router = useRouter()
-  const [pendingArtworks, setPendingArtworks] = useState<typeof mockPendingArtworks>([])
-  const [filteredArtworks, setFilteredArtworks] = useState<typeof mockPendingArtworks>([])
-  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterMedium, setFilterMedium] = useState("all")
-  const [sortOrder, setSortOrder] = useState("newest")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [selectedArtwork, setSelectedArtwork] = useState<(typeof mockPendingArtworks)[0] | null>(null)
+  const router = useRouter();
+  const [pendingArtworks, setPendingArtworks] = useState([]);
+  const [filteredArtworks, setFilteredArtworks] = useState([]);
+  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterMedium, setFilterMedium] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [selectedArtwork, setSelectedArtwork] = useState(null);
+
+  // useEffect(() => {
+  //   // Simulate API fetch
+  //   setTimeout(() => {
+  //     setPendingArtworks(mockPendingArtworks);
+  //     setFilteredArtworks(mockPendingArtworks);
+  //   }, 500);
+  // }, []);
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setPendingArtworks(mockPendingArtworks)
-      setFilteredArtworks(mockPendingArtworks)
-    }, 500)
-  }, [])
+    fetch("http://localhost:3001/artworks", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("artworks:", data);
+        setPendingArtworks(data);
+        setFilteredArtworks(data);
+        // [
+        //   {
+        //     id: 2,
+        //     imageHash:
+        //       "0xbbb5f4fbef7eb6c378ff04b12009e5382edaaf6bf248bcadc450e1503305393d",
+        //     artist: "0xYourArtistAddress",
+        //     title: "qwqwqeqeq",
+        //     isOriginal: true,
+        //     validated: true,
+        //     consensusCount: 1,
+        //     requiredValidators: 2,
+        //     originalAuthor: "qwe",
+        //     timestamp: "2025-05-30T14:33:29.700Z",
+        //     createdAt: "2025-05-30T14:33:29.702Z",
+        //     updatedAt: "2025-05-30T14:33:29.700Z",
+        //   },
+        //   {
+        //     id: 1,
+        //     imageHash:
+        //       "0xdb595ff537fca73c3c4a5f6d5878959478b1802c0827f40928d39062de79fc9f",
+        //     artist: "0xYourArtistAddress",
+        //     title: "qwe",
+        //     isOriginal: true,
+        //     validated: true,
+        //     consensusCount: 1,
+        //     requiredValidators: 2,
+        //     originalAuthor: "qwe",
+        //     timestamp: "2025-05-30T14:32:19.751Z",
+        //     createdAt: "2025-05-30T14:32:19.799Z",
+        //     updatedAt: "2025-05-30T14:32:19.751Z",
+        //   },
+        // ];
+      });
+  }, []);
 
   useEffect(() => {
-    let result = [...pendingArtworks]
+    let result = [...pendingArtworks];
 
     // Apply search filter
     if (searchTerm) {
       result = result.filter(
         (item) =>
           item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.artist.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+          item.artist.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
     // Apply medium filter
     if (filterMedium !== "all") {
-      result = result.filter((item) => item.medium.toLowerCase().includes(filterMedium.toLowerCase()))
+      result = result.filter((item) =>
+        item.medium.toLowerCase().includes(filterMedium.toLowerCase())
+      );
     }
 
     // Apply sorting
     result.sort((a, b) => {
-      const dateA = new Date(a.dateSubmitted).getTime()
-      const dateB = new Date(b.dateSubmitted).getTime()
+      const dateA = new Date(a.dateSubmitted).getTime();
+      const dateB = new Date(b.dateSubmitted).getTime();
 
-      return sortOrder === "newest" ? dateB - dateA : dateA - dateB
-    })
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
-    setFilteredArtworks(result)
-  }, [pendingArtworks, searchTerm, filterMedium, sortOrder])
+    setFilteredArtworks(result);
+  }, [pendingArtworks, searchTerm, filterMedium, sortOrder]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const handleSelectAll = () => {
     if (selectedArtworks.length === filteredArtworks.length) {
-      setSelectedArtworks([])
+      setSelectedArtworks([]);
     } else {
-      setSelectedArtworks(filteredArtworks.map((artwork) => artwork.id))
+      setSelectedArtworks(filteredArtworks.map((artwork) => artwork.id));
     }
-  }
+  };
 
   const handleSelectArtwork = (id: string) => {
     if (selectedArtworks.includes(id)) {
-      setSelectedArtworks(selectedArtworks.filter((artworkId) => artworkId !== id))
+      setSelectedArtworks(
+        selectedArtworks.filter((artworkId) => artworkId !== id)
+      );
     } else {
-      setSelectedArtworks([...selectedArtworks, id])
+      setSelectedArtworks([...selectedArtworks, id]);
     }
-  }
+  };
 
   const handleVerifySelected = () => {
     if (selectedArtworks.length === 0) {
-      alert("Please select at least one artwork to verify")
-      return
+      alert("Please select at least one artwork to verify");
+      return;
     }
 
     // Find the first selected artwork to start verification
-    const firstSelected = pendingArtworks.find((artwork) => artwork.id === selectedArtworks[0])
+    const firstSelected = pendingArtworks.find(
+      (artwork) => artwork.id === selectedArtworks[0]
+    );
     if (firstSelected) {
-      setSelectedArtwork(firstSelected)
-      setIsVerifying(true)
+      setSelectedArtwork(firstSelected);
+      setIsVerifying(true);
     }
-  }
+  };
 
-  const handleVerificationComplete = (artworkId: string, isApproved: boolean, feedback: string) => {
+  const handleVerificationComplete = (
+    artworkId: string,
+    isApproved: boolean,
+    feedback: string
+  ) => {
     // In a real app, this would call an API to update the verification status
-    console.log(`Artwork ${artworkId} ${isApproved ? "approved" : "rejected"}: ${feedback}`)
+    console.log(
+      `Artwork ${artworkId} ${
+        isApproved ? "approved" : "rejected"
+      }: ${feedback}`
+    );
 
     // Remove the verified artwork from selected and pending lists
-    setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId))
-    setPendingArtworks(pendingArtworks.filter((artwork) => artwork.id !== artworkId))
+    setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId));
+    setPendingArtworks(
+      pendingArtworks.filter((artwork) => artwork.id !== artworkId)
+    );
 
     // If there are more selected artworks, continue to the next one
-    const remainingSelected = selectedArtworks.filter((id) => id !== artworkId)
+    const remainingSelected = selectedArtworks.filter((id) => id !== artworkId);
     if (remainingSelected.length > 0) {
-      const nextArtwork = pendingArtworks.find((artwork) => artwork.id === remainingSelected[0])
+      const nextArtwork = pendingArtworks.find(
+        (artwork) => artwork.id === remainingSelected[0]
+      );
       if (nextArtwork) {
-        setSelectedArtwork(nextArtwork)
+        setSelectedArtwork(nextArtwork);
       } else {
-        setIsVerifying(false)
-        setSelectedArtwork(null)
+        setIsVerifying(false);
+        setSelectedArtwork(null);
       }
     } else {
-      setIsVerifying(false)
-      setSelectedArtwork(null)
+      setIsVerifying(false);
+      setSelectedArtwork(null);
     }
-  }
+  };
 
   const handleCancelVerification = () => {
-    setIsVerifying(false)
-    setSelectedArtwork(null)
-  }
+    setIsVerifying(false);
+    setSelectedArtwork(null);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center">
-          <Button variant="ghost" className="mr-2 flex items-center text-sm" onClick={() => router.push("/app")}>
+          <Button
+            variant="ghost"
+            className="mr-2 flex items-center text-sm"
+            onClick={() => router.push("/app")}
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
@@ -221,7 +306,9 @@ export default function VerifyQueuePage() {
       <Card>
         <CardHeader>
           <CardTitle>Pending Artwork</CardTitle>
-          <CardDescription>Verify artwork authenticity using AI-powered analysis</CardDescription>
+          <CardDescription>
+            Verify artwork authenticity using AI-powered analysis
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -257,7 +344,9 @@ export default function VerifyQueuePage() {
           {filteredArtworks.length === 0 ? (
             <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
               <p className="text-gray-500">
-                {pendingArtworks.length === 0 ? "Loading verification queue..." : "No artworks match your filters"}
+                {pendingArtworks.length === 0
+                  ? "Loading verification queue..."
+                  : "No artworks match your filters"}
               </p>
             </div>
           ) : (
@@ -269,27 +358,48 @@ export default function VerifyQueuePage() {
                       <th className="px-4 py-3 text-left">
                         <div className="flex items-center">
                           <Checkbox
-                            checked={filteredArtworks.length > 0 && selectedArtworks.length === filteredArtworks.length}
+                            checked={
+                              filteredArtworks.length > 0 &&
+                              selectedArtworks.length ===
+                                filteredArtworks.length
+                            }
                             onCheckedChange={handleSelectAll}
                             aria-label="Select all"
                           />
                         </div>
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Artwork</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Artist</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Medium</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Submitted</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Action</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Artwork
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Artist
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Medium
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Submitted
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {filteredArtworks.map((artwork) => (
-                      <tr key={artwork.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                      <tr
+                        key={artwork.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-900"
+                      >
                         <td className="px-4 py-3">
                           <Checkbox
                             checked={selectedArtworks.includes(artwork.id)}
-                            onCheckedChange={() => handleSelectArtwork(artwork.id)}
+                            onCheckedChange={() =>
+                              handleSelectArtwork(artwork.id)
+                            }
                             aria-label={`Select ${artwork.title}`}
                           />
                         </td>
@@ -297,22 +407,26 @@ export default function VerifyQueuePage() {
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-md overflow-hidden flex-shrink-0">
                               <img
-                                src={artwork.images[0] || "/placeholder.svg"}
-                                alt={artwork.title}
+                                src={artwork?.images?.[0] || "/placeholder.svg"}
+                                alt={artwork?.title}
                                 className="h-full w-full object-cover"
                               />
                             </div>
                             <div className="truncate max-w-[200px]">
-                              <p className="text-sm font-medium truncate">{artwork.title}</p>
-                              <p className="text-xs text-gray-500 truncate">
-                                {artwork.description.substring(0, 50)}...
+                              <p className="text-sm font-medium truncate">
+                                {artwork?.title}
                               </p>
+                              {/* <p className="text-xs text-gray-500 truncate">
+                                {artwork?.description.substring(0, 50)}...
+                              </p> */}
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm">{artwork.artist}</td>
-                        <td className="px-4 py-3 text-sm">{artwork.medium}</td>
-                        <td className="px-4 py-3 text-sm">{formatDate(artwork.dateSubmitted)}</td>
+                        <td className="px-4 py-3 text-sm">{artwork?.medium}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {formatDate(artwork.createdAt)}
+                        </td>
                         <td className="px-4 py-3">
                           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -324,8 +438,8 @@ export default function VerifyQueuePage() {
                             size="sm"
                             className="bg-teal-600 hover:bg-teal-700"
                             onClick={() => {
-                              setSelectedArtwork(artwork)
-                              setIsVerifying(true)
+                              setSelectedArtwork(artwork);
+                              setIsVerifying(true);
                             }}
                           >
                             <Sparkles className="h-3 w-3 mr-1" />
@@ -340,10 +454,15 @@ export default function VerifyQueuePage() {
 
               <div className="flex justify-between items-center mt-4">
                 <div className="text-sm text-gray-500">
-                  {selectedArtworks.length} of {filteredArtworks.length} selected
+                  {selectedArtworks.length} of {filteredArtworks.length}{" "}
+                  selected
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedArtworks([])}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedArtworks([])}
+                  >
                     Clear Selection
                   </Button>
                   <Button
@@ -373,5 +492,5 @@ export default function VerifyQueuePage() {
         />
       )}
     </div>
-  )
+  );
 }

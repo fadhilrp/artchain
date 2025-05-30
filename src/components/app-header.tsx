@@ -1,13 +1,21 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { ShieldCheck, Menu, X, Settings, ClipboardList, Coins, Code } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { ModeToggle } from "@/components/mode-toggle"
+import Link from "next/link";
+import {
+  ShieldCheck,
+  Menu,
+  X,
+  Settings,
+  ClipboardList,
+  Coins,
+  Code,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function AppHeader() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="border-b bg-white dark:bg-gray-950">
@@ -23,33 +31,55 @@ export function AppHeader() {
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {isMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/app" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          {/* <Link
+            href="/app"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             Dashboard
-          </Link>
-          <Link href="/app/upload" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          </Link> */}
+          <Link
+            href="/app/upload"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             Upload Art
           </Link>
-          <Link href="/app/my-art" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          {/* <Link
+            href="/app/my-art"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             My Artwork
-          </Link>
-          <Link href="/app/verification" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          </Link> */}
+          <Link
+            href="/app/verification"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             <ClipboardList className="h-4 w-4 inline mr-1" />
             Verification
           </Link>
-          <Link href="/app/rewards" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          <Link
+            href="/app/rewards"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             <Coins className="h-4 w-4 inline mr-1" />
             Rewards
           </Link>
-          <Link href="/app/api-demo" className="text-sm font-medium hover:text-teal-600 transition-colors">
+          {/* <Link
+            href="/app/api-demo"
+            className="text-sm font-medium hover:text-teal-600 transition-colors"
+          >
             <Code className="h-4 w-4 inline mr-1" />
             API Demo
-          </Link>
-          <Link
+          </Link> */}
+          {/* <Link
             href="/app/settings/ai-validation"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
           >
@@ -61,20 +91,20 @@ export function AppHeader() {
             <Button variant="outline" size="sm">
               Log Out
             </Button>
-          </div>
+          </div> */}
         </nav>
 
         {/* Mobile navigation */}
         {isMenuOpen && (
           <div className="absolute top-16 left-0 right-0 bg-white dark:bg-gray-950 border-b z-50 md:hidden">
             <nav className="flex flex-col p-4 space-y-4">
-              <Link
+              {/* <Link
                 href="/app"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
-              </Link>
+              </Link> */}
               <Link
                 href="/app/upload"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
@@ -82,13 +112,13 @@ export function AppHeader() {
               >
                 Upload Art
               </Link>
-              <Link
+              {/* <Link
                 href="/app/my-art"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 My Artwork
-              </Link>
+              </Link> */}
               <Link
                 href="/app/verify-queue"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
@@ -105,15 +135,15 @@ export function AppHeader() {
                 <Coins className="h-4 w-4 inline mr-1" />
                 Rewards
               </Link>
-              <Link
+              {/* <Link
                 href="/app/api-demo"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Code className="h-4 w-4 inline mr-1" />
                 API Demo
-              </Link>
-              <Link
+              </Link> */}
+              {/* <Link
                 href="/app/settings/ai-validation"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
@@ -126,11 +156,11 @@ export function AppHeader() {
                 <Button variant="outline" size="sm">
                   Log Out
                 </Button>
-              </div>
+              </div> */}
             </nav>
           </div>
         )}
       </div>
     </header>
-  )
+  );
 }
