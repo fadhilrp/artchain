@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThirdwebProvider } from "thirdweb/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app-header";
+import { Providers } from './providers'
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -15,20 +16,22 @@ export const metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThirdwebProvider>
-          <div className="min-h-screen flex flex-col">
-            <AppHeader />
-            <main className="flex-1 bg-gray-50 dark:bg-gray-900">
-              {children}
-            </main>
-          </div>
-        </ThirdwebProvider>
+        <Providers>
+          <ThirdwebProvider>
+            <div className="min-h-screen flex flex-col">
+              <AppHeader />
+              <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+                {children}
+              </main>
+            </div>
+          </ThirdwebProvider>
+        </Providers>
       </body>
     </html>
   );

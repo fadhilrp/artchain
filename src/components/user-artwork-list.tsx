@@ -25,120 +25,49 @@ import { ValidationProgressBadge } from "@/components/validation-progress-badge"
 import { ArtworkValidationStatus } from "@/components/artwork-validation-status";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Mock data for user submissions
-const mockSubmissions = [
-  {
-    id: "art-1",
-    title: "Abstract Harmony",
-    dateSubmitted: "2025-05-10T14:30:00Z",
-    status: "verified",
-    medium: "Oil on canvas",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "An exploration of color and form inspired by musical rhythms.",
-    feedback: "Artwork verified. Certificate issued on the blockchain.",
-    tokenId: "ART-78392-XYZ",
-    transactionHash: "0x8f7d...e4a2",
-    validationStatus: {
-      required: 11,
-      completed: 11,
-      approved: 9,
-      rejected: 2,
-      status: "approved",
-      validators: [],
-      consensusReached: true,
-      consensusDate: "2025-05-10T14:30:00Z",
-    },
-  },
-  {
-    id: "art-2",
-    title: "Urban Landscape #3",
-    dateSubmitted: "2025-05-12T09:15:00Z",
-    status: "pending",
-    medium: "Acrylic on canvas",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "A contemporary view of city architecture and human interaction.",
-    feedback: null,
-    tokenId: null,
-    transactionHash: null,
-    validationStatus: {
-      required: 11,
-      completed: 5,
-      approved: 4,
-      rejected: 1,
-      status: "in_progress",
-      validators: [],
-      consensusReached: false,
-    },
-  },
-  {
-    id: "art-3",
-    title: "Digital Dreams",
-    dateSubmitted: "2025-05-08T16:45:00Z",
-    status: "rejected",
-    medium: "Digital Art",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "A digital artwork exploring the intersection of technology and consciousness.",
-    feedback:
-      "Unable to verify originality. Please provide additional documentation of your creative process.",
-    tokenId: null,
-    transactionHash: null,
-    validationStatus: {
-      required: 11,
-      completed: 11,
-      approved: 3,
-      rejected: 8,
-      status: "rejected",
-      validators: [],
-      consensusReached: true,
-      consensusDate: "2025-05-08T16:45:00Z",
-    },
-  },
-  {
-    id: "art-4",
-    title: "Sunset Reflections",
-    dateSubmitted: "2025-05-05T10:20:00Z",
-    status: "verified",
-    medium: "Watercolor",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description: "A serene sunset scene with reflections on water.",
-    feedback: "Beautiful work, verified and registered on blockchain.",
-    tokenId: "ART-65432-ABC",
-    transactionHash: "0x3e7a...b2c1",
-    validationStatus: {
-      required: 11,
-      completed: 11,
-      approved: 10,
-      rejected: 1,
-      status: "approved",
-      validators: [],
-      consensusReached: true,
-      consensusDate: "2025-05-05T10:20:00Z",
-    },
-  },
-];
-
 interface UserArtworkListProps {
   filter?: "all" | "verified" | "pending" | "rejected";
 }
 
 export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
-  const [submissions, setSubmissions] = useState<typeof mockSubmissions>([]);
-  const [filteredSubmissions, setFilteredSubmissions] = useState<
-    typeof mockSubmissions
-  >([]);
-  const [selectedArtwork, setSelectedArtwork] = useState<
-    (typeof mockSubmissions)[0] | null
-  >(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<any[]>([]);
+  const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setSubmissions(mockSubmissions);
-    }, 500);
+    fetch('http://localhost:3001/artworks')
+      .then(res => res.json())
+      .then(data => {
+        setSubmissions(
+          data.map((artwork: any) => ({
+            id: artwork.id,
+            title: artwork.title,
+            dateSubmitted: artwork.metadata?.timestamp || artwork.createdAt,
+            status: artwork.consensus
+              ? (artwork.isDuplicate ? "rejected" : "verified")
+              : "pending",
+            medium: artwork.metadata?.medium || "Unknown",
+            images: ["/placeholder.svg"], // No image storage yet
+            description: artwork.metadata?.description || "",
+            feedback: artwork.isDuplicate ? "Duplicate artwork detected." : null,
+            tokenId: null,
+            transactionHash: null,
+            validationStatus: {
+              required: 11,
+              completed: artwork.consensus ? 11 : 5,
+              approved: artwork.isDuplicate ? 3 : 9,
+              rejected: artwork.isDuplicate ? 8 : 2,
+              status: artwork.consensus
+                ? (artwork.isDuplicate ? "rejected" : "approved")
+                : "in_progress",
+              validators: [],
+              consensusReached: artwork.consensus,
+              consensusDate: artwork.metadata?.timestamp || artwork.createdAt,
+            },
+          }))
+        );
+      });
   }, []);
 
   useEffect(() => {
