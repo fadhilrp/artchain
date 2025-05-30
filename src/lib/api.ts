@@ -29,7 +29,7 @@ export class ValidationError extends Error {
 export const api = {
   // Get all artworks
   getArtworks: async (): Promise<Artwork[]> => {
-    const response = await fetch(`${API_BASE_URL}/artworks`);
+    const response = await fetch(`${API_BASE_URL}/api/artworks`);
     if (!response.ok) {
       throw new Error('Failed to fetch artworks');
     }
