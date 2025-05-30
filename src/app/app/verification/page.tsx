@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { VerificationProcess } from "@/components/verification-process"
+import { api, Artwork, ValidationError } from "@/lib/api"
+import { useAccount } from "wagmi"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { toast } from "sonner"
 
 // Mock data for pending verifications
 const mockPendingArtworks = [
@@ -83,22 +87,46 @@ const mockPendingArtworks = [
 
 export default function VerifyQueuePage() {
   const router = useRouter()
-  const [pendingArtworks, setPendingArtworks] = useState<typeof mockPendingArtworks>([])
-  const [filteredArtworks, setFilteredArtworks] = useState<typeof mockPendingArtworks>([])
+  const { address: validatorAddress } = useAccount()
+  const [pendingArtworks, setPendingArtworks] = useState<Artwork[]>([])
+  const [filteredArtworks, setFilteredArtworks] = useState<Artwork[]>([])
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterMedium, setFilterMedium] = useState("all")
   const [sortOrder, setSortOrder] = useState("newest")
   const [isVerifying, setIsVerifying] = useState(false)
-  const [selectedArtwork, setSelectedArtwork] = useState<(typeof mockPendingArtworks)[0] | null>(null)
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setPendingArtworks(mockPendingArtworks)
-      setFilteredArtworks(mockPendingArtworks)
-    }, 500)
+    fetchArtworks()
   }, [])
+
+  const fetchArtworks = async () => {
+    try {
+      setIsLoading(true)
+      const artworks = await api.getArtworks()
+      // Transform the data to match our interface
+      const transformedArtworks: Artwork[] = artworks.map(artwork => ({
+        ...artwork,
+        id: artwork.imageHash, // Use imageHash as id if not provided
+        status: artwork.validated ? 'validated' : 'pending' as const,
+        dateSubmitted: artwork.timestamp || new Date().toISOString(),
+        images: artwork.images || ['/placeholder.svg?height=400&width=400'],
+        description: artwork.description || '',
+        additionalInfo: artwork.additionalInfo || '',
+        medium: artwork.medium || 'Unknown',
+      }))
+      setPendingArtworks(transformedArtworks)
+      setFilteredArtworks(transformedArtworks)
+    } catch (err) {
+      setError('Failed to fetch artworks')
+      console.error('Error fetching artworks:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     let result = [...pendingArtworks]
@@ -167,27 +195,56 @@ export default function VerifyQueuePage() {
     }
   }
 
-  const handleVerificationComplete = (artworkId: string, isApproved: boolean, feedback: string) => {
-    // In a real app, this would call an API to update the verification status
-    console.log(`Artwork ${artworkId} ${isApproved ? "approved" : "rejected"}: ${feedback}`)
+  const handleVerificationComplete = async (artworkId: string, isApproved: boolean, feedback: string) => {
+    if (!validatorAddress) {
+      toast.error('Please connect your wallet to validate artwork')
+      return
+    }
 
-    // Remove the verified artwork from selected and pending lists
-    setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId))
-    setPendingArtworks(pendingArtworks.filter((artwork) => artwork.id !== artworkId))
+    try {
+      const artwork = pendingArtworks.find(a => a.id === artworkId)
+      if (!artwork) return
 
-    // If there are more selected artworks, continue to the next one
-    const remainingSelected = selectedArtworks.filter((id) => id !== artworkId)
-    if (remainingSelected.length > 0) {
-      const nextArtwork = pendingArtworks.find((artwork) => artwork.id === remainingSelected[0])
-      if (nextArtwork) {
-        setSelectedArtwork(nextArtwork)
+      await api.validateArtwork(
+        artwork.imageHash,
+        isApproved,
+        isApproved ? artwork.artist : feedback,
+        validatorAddress
+      )
+
+      // Remove the verified artwork from selected and pending lists
+      setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId))
+      setPendingArtworks(pendingArtworks.filter((artwork) => artwork.id !== artworkId))
+
+      // If there are more selected artworks, continue to the next one
+      const remainingSelected = selectedArtworks.filter((id) => id !== artworkId)
+      if (remainingSelected.length > 0) {
+        const nextArtwork = pendingArtworks.find((artwork) => artwork.id === remainingSelected[0])
+        if (nextArtwork) {
+          setSelectedArtwork(nextArtwork)
+        } else {
+          setIsVerifying(false)
+          setSelectedArtwork(null)
+        }
       } else {
         setIsVerifying(false)
         setSelectedArtwork(null)
       }
-    } else {
-      setIsVerifying(false)
-      setSelectedArtwork(null)
+
+      // Refresh the artwork list
+      await fetchArtworks()
+      toast.success('Artwork validated successfully')
+    } catch (err) {
+      console.error('Error validating artwork:', err)
+      if (err instanceof ValidationError) {
+        if (err.code === 'ALREADY_VOTED') {
+          toast.error('You have already validated this artwork')
+        } else {
+          toast.error(err.message)
+        }
+      } else {
+        toast.error('Failed to validate artwork. Please try again.')
+      }
     }
   }
 
@@ -207,10 +264,11 @@ export default function VerifyQueuePage() {
           <h1 className="text-2xl font-bold">Artwork Verification</h1>
         </div>
         <div className="flex gap-2">
+          <ConnectButton />
           <Button
             className="bg-teal-600 hover:bg-teal-700"
             onClick={handleVerifySelected}
-            disabled={selectedArtworks.length === 0}
+            disabled={selectedArtworks.length === 0 || !validatorAddress}
           >
             <Sparkles className="mr-2 h-4 w-4" />
             Verify Selected ({selectedArtworks.length})
@@ -254,10 +312,20 @@ export default function VerifyQueuePage() {
             </div>
           </div>
 
-          {filteredArtworks.length === 0 ? (
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
+              <p className="text-gray-500">Loading verification queue...</p>
+            </div>
+          ) : filteredArtworks.length === 0 ? (
             <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
               <p className="text-gray-500">
-                {pendingArtworks.length === 0 ? "Loading verification queue..." : "No artworks match your filters"}
+                {pendingArtworks.length === 0 ? "No artworks available for verification" : "No artworks match your filters"}
               </p>
             </div>
           ) : (
