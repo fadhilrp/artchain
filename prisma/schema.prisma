@@ -13,3 +13,14 @@ model User {
   email         String? @unique
   walletAddress String  @unique
 }
+
+model Artwork {
+  id          Int      @id @default(autoincrement())
+  imageHash   String
+  artist      String
+  isDuplicate Boolean
+  consensus   Boolean
+  title       String
+  metadata    Json
+  createdAt   DateTime @default(now())
+}
