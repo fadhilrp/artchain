@@ -421,7 +421,7 @@ export default function VerifyQueuePage() {
                         <td className="px-4 py-3 text-sm">{artwork.artist}</td>
                         <td className="px-4 py-3 text-sm">{artwork?.medium}</td>
                         <td className="px-4 py-3 text-sm">
-                          {formatDate(artwork.createdAt)}
+                          {formatDate(artwork.dateSubmitted)}
                         </td>
                         <td className="px-4 py-3">
                           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 flex items-center gap-1">
