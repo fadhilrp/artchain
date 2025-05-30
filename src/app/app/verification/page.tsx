@@ -116,13 +116,15 @@ export default function VerifyQueuePage() {
       // Transform the data to match our interface
       const transformedArtworks: Artwork[] = artworks.map(artwork => ({
         ...artwork,
-        id: artwork.imageHash, // Use imageHash as id if not provided
+        id: artwork.imageHash,
+        title: `Artwork ${artwork.imageHash.slice(0, 8)}...`,
+        artist: artwork.originalAuthor,
         status: artwork.validated ? 'validated' : 'pending' as const,
         dateSubmitted: artwork.timestamp || new Date().toISOString(),
-        images: artwork.images || ['/placeholder.svg?height=400&width=400'],
-        description: artwork.description || '',
-        additionalInfo: artwork.additionalInfo || '',
-        medium: artwork.medium || 'Unknown',
+        images: [`https://ipfs.io/ipfs/${artwork.imageHash}`],
+        description: `Validation Status: ${artwork.validated ? 'Validated' : 'Pending'}\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
+        additionalInfo: `Original: ${artwork.isOriginal ? 'Yes' : 'No'}`,
+        medium: 'Blockchain Art',
       }))
       setPendingArtworks(transformedArtworks)
       setFilteredArtworks(transformedArtworks)
