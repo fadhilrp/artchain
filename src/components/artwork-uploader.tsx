@@ -20,6 +20,7 @@ export function ArtworkUploader({ onSuccess }: ArtworkUploaderProps) {
   const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [uploadResult, setUploadResult] = useState<any>(null)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -71,12 +72,36 @@ export function ArtworkUploader({ onSuccess }: ArtworkUploaderProps) {
 
     setIsUploading(true)
 
-    // Simulate upload process
-    setTimeout(() => {
+    const data = new FormData()
+    data.append("image", files[0]) // Only sending the first image for now
+    data.append("artist", "0xYourArtistAddress") // Replace with actual artist address if available
+    data.append("title", formData.title)
+    // Add more fields as needed
+    // data.append("description", formData.description);
+    // data.append("medium", formData.medium);
+    // data.append("year", formData.year);
+    // data.append("dimensions", formData.dimensions);
+    // data.append("additionalInfo", formData.additionalInfo);
+
+    try {
+      const response = await fetch("http://localhost:3001/upload", {
+        method: "POST",
+        body: data,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
+      }
+
+      const result = await response.json()
+      console.log("Upload result:", result)
+
       setIsUploading(false)
       setIsSuccess(true)
+      setUploadResult(result)
 
-      // Reset form after success
+      // Optionally, show the result to the user here
+
       setTimeout(() => {
         setFiles([])
         setPreviews([])
@@ -89,9 +114,14 @@ export function ArtworkUploader({ onSuccess }: ArtworkUploaderProps) {
           additionalInfo: "",
         })
         setIsSuccess(false)
+        setUploadResult(null)
         onSuccess()
-      }, 2000)
-    }, 2000)
+      }, 6000)
+    } catch (error) {
+      setIsUploading(false)
+      alert("There was an error uploading your artwork. Please try again.")
+      console.error(error)
+    }
   }
 
   return (
@@ -100,8 +130,18 @@ export function ArtworkUploader({ onSuccess }: ArtworkUploaderProps) {
         <Alert className="bg-teal-50 border-teal-200 text-teal-800 dark:bg-teal-950/20 dark:border-teal-900 dark:text-teal-400">
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            Your artwork has been successfully submitted for verification! You can track its status in the "My Artwork"
-            section.
+            Your artwork has been successfully submitted for verification! You can track its status in the &quot;My
+            Artwork&quot; section.<br />
+            {uploadResult && (
+              <div className="mt-4 text-sm">
+                <div><b>Image Hash:</b> {uploadResult.imageHash}</div>
+                <div><b>Duplicate:</b> {uploadResult.isDuplicate ? "Yes" : "No"}</div>
+                <div><b>Consensus:</b> {uploadResult.consensus ? "Reached" : "Not Reached"}</div>
+                <div><b>Metadata:</b> {uploadResult.metadata && (
+                  <pre className="bg-gray-100 rounded p-2 mt-1 text-xs overflow-x-auto">{JSON.stringify(uploadResult.metadata, null, 2)}</pre>
+                )}</div>
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       ) : (
