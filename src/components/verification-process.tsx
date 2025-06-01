@@ -79,29 +79,27 @@ export function VerificationProcess({
     { name: "Final Assessment", icon: Shield, description: "Generating confidence scores", duration: 800 },
   ];
 
-  // Mock validation status if not provided
-  const validationStatus =
-    artwork.validationStatus ||
-    ({
-      required: 11,
-      completed: Math.floor(Math.random() * 11), // Random number of completed validations (0-10)
-      approved: Math.floor(Math.random() * 8), // Random number of approvals
-      rejected: Math.floor(Math.random() * 3), // Random number of rejections
-      status: "in_progress",
-      validators: Array(Math.floor(Math.random() * 11))
-        .fill(null)
-        .map((_, i) => ({
-          id: `validator-${i + 1}`,
-          name: `Validator ${i + 1}`,
-          decision: Math.random() > 0.3 ? "approve" : "reject",
-          feedback: `Feedback from validator ${i + 1}`,
-          timestamp: new Date(
-            Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          reputation: 70 + Math.floor(Math.random() * 30),
-        })),
-      consensusReached: false,
-    } as ValidationStatus);
+  // Use actual artwork data if available, otherwise fallback to mock validation status
+  const validationStatus = {
+    required: artwork.requiredValidators || 2,
+    completed: artwork.consensusCount || 0,
+    approved: Math.floor((artwork.consensusCount || 0) * 0.7), // Approximate 70% approval rate
+    rejected: Math.floor((artwork.consensusCount || 0) * 0.3), // Approximate 30% rejection rate
+    status: artwork.validated ? "validated" : "in_progress",
+    validators: Array(artwork.consensusCount || 0)
+      .fill(null)
+      .map((_, i) => ({
+        id: `validator-${i + 1}`,
+        name: `Validator ${i + 1}`,
+        decision: Math.random() > 0.3 ? "approve" : "reject",
+        feedback: `Feedback from validator ${i + 1}`,
+        timestamp: new Date(
+          Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        reputation: 70 + Math.floor(Math.random() * 30),
+      })),
+    consensusReached: artwork.validated || false,
+  } as ValidationStatus;
 
   useEffect(() => {
     // Enhanced AI analysis progress simulation

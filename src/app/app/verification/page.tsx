@@ -139,6 +139,11 @@ export default function VerifyQueuePage() {
         }\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
         additionalInfo: `Original: ${artwork.isOriginal ? "Yes" : "No"}`,
         medium: "Blockchain Art",
+        consensusCount: artwork.consensusCount || 0,
+        requiredValidators: artwork.requiredValidators || 2,
+        imageHash: artwork.imageHash,
+        isOriginal: artwork.isOriginal,
+        validated: artwork.validated,
       }));
       setPendingArtworks(transformedArtworks);
       setFilteredArtworks(transformedArtworks);
