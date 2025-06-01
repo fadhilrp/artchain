@@ -54,12 +54,12 @@ export function AppHeader() {
             <Upload className="h-4 w-4 inline mr-1" />
             Upload Art
           </Link>
-          {/* <Link
+          <Link
             href="/app/my-art"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
           >
             My Artwork
-          </Link> */}
+          </Link>
           <Link
             href="/app/verification"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
@@ -115,13 +115,13 @@ export function AppHeader() {
                 <Upload className="h-4 w-4 inline mr-1" />
                 Upload Art
               </Link>
-              {/* <Link
+              <Link
                 href="/app/my-art"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 My Artwork
-              </Link> */}
+              </Link>
               <Link
                 href="/app/verify-queue"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
