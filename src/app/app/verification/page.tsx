@@ -336,7 +336,7 @@ export default function VerifyQueuePage() {
               />
             </div>
 
-            <div className="flex gap-2">
+            {/* <div className="flex gap-2">
               <div className="w-40">
                 <Select value={filterMedium} onValueChange={setFilterMedium}>
                   <SelectTrigger>
@@ -352,7 +352,7 @@ export default function VerifyQueuePage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {error && (
@@ -427,11 +427,14 @@ export default function VerifyQueuePage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-md overflow-hidden flex-shrink-0">
-                              <img
-                                src={artwork?.images?.[0] || "/placeholder.svg"}
-                                alt={artwork?.title}
+                              <div
                                 className="h-full w-full object-cover"
-                              />
+                                style={{
+                                  backgroundColor: `#${Math.floor(
+                                    Math.random() * 16777215
+                                  ).toString(16)}`,
+                                }}
+                              ></div>
                             </div>
                             <div className="truncate max-w-[200px]">
                               <p className="text-sm font-medium truncate">

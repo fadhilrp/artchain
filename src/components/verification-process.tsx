@@ -36,18 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ValidationStatus, Validator } from "@/lib/types/validation";
 
 interface VerificationProcessProps {
-  artwork: {
-    id: string;
-    title: string;
-    artist: string;
-    dateSubmitted: string;
-    status: string;
-    medium: string;
-    images: string[];
-    description: string;
-    additionalInfo?: string;
-    validationStatus?: ValidationStatus;
-  };
+  artwork: any;
   isOpen: boolean;
   onClose: () => void;
   onComplete: (
@@ -67,9 +56,9 @@ export function VerificationProcess({
   totalSelected,
   currentIndex,
 }: VerificationProcessProps) {
-  const [step, setStep] = useState<"analyzing" | "results" | "decision">(
-    "analyzing"
-  );
+  const [step, setStep] = useState<
+    "analyzing" | "results" | "decision" | "success"
+  >("analyzing");
   const [validationDecision, setValidationDecision] = useState<
     "approve" | "reject" | null
   >(null);
@@ -179,7 +168,7 @@ export function VerificationProcess({
       setIsSubmitting(false);
       setValidationDecision(null);
       setFeedback("");
-      setStep("analyzing");
+      setStep("success"); // Transition to success step
       setAnalysisProgress(0);
       setStageProgress(0);
       setAnalysisStage("Initializing");
@@ -571,6 +560,25 @@ export function VerificationProcess({
                 </p>
               </div>
             </div>
+          </div>
+        );
+
+      case "success":
+        return (
+          <div className="py-12 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Verification Successful!</h3>
+            <p className="text-gray-500 mb-6">
+              You have successfully verified the artwork and earned{" "}
+              <strong>10 VLT</strong> rewards.
+            </p>
+            <Button onClick={onClose} className="bg-teal-600 hover:bg-teal-700">
+              Close
+            </Button>
           </div>
         );
     }

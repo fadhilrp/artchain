@@ -65,13 +65,13 @@ export function AppHeader() {
             <ClipboardList className="h-4 w-4 inline mr-1" />
             Verification
           </Link>
-          <Link
+          {/* <Link
             href="/app/rewards"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
           >
             <Coins className="h-4 w-4 inline mr-1" />
             Rewards
-          </Link>
+          </Link> */}
           {/* <Link
             href="/app/api-demo"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
