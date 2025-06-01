@@ -6,7 +6,6 @@ import { useEffect } from "react";
 
 export default function Home() {
   const account = useActiveAccount(); // activeAccount has .address
-  console.log({ account });
 
   useEffect(() => {
     if (account?.address) {
