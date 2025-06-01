@@ -63,22 +63,36 @@ export default function VerifyQueuePage() {
         throw new Error('Failed to fetch artworks from blockchain');
       }
       
-      const blockchainArtworks = await response.json();
-      console.log('Fetched artworks from blockchain:', blockchainArtworks);
+      const blockchainResponse = await response.json();
+      console.log('Fetched response from blockchain:', blockchainResponse);
       
-      // Also get database artworks for additional metadata (IPFS, titles, etc.)
-      const dbArtworks = await api.getArtworks();
+      // Handle different response formats (IPFS-enabled vs legacy)
+      const blockchainArtworks = blockchainResponse.artworks || blockchainResponse;
+      const isIPFSEnabled = blockchainResponse.source === 'ipfs-blockchain';
+      
+      console.log(`Using ${isIPFSEnabled ? 'IPFS-enabled' : 'legacy'} blockchain integration`);
+      console.log('Raw blockchain artworks:', blockchainArtworks);
+      
+      // Also get database artworks for additional metadata if not using IPFS contract
+      let dbArtworks: Artwork[] = [];
+      if (!isIPFSEnabled) {
+        dbArtworks = await api.getArtworks();
+      }
       
       // Transform and merge blockchain data with database metadata
       const transformedArtworks: Artwork[] = blockchainArtworks.map((blockchainArt: any) => {
-        // Find matching database entry by imageHash
+        // Find matching database entry by imageHash (only needed for legacy)
         const dbArt = dbArtworks.find(db => db.imageHash === blockchainArt.imageHash);
         
-        // Use IPFS images if available, fallback to placeholder
+        // Use IPFS images - priority: blockchain IPFS URIs > database IPFS URIs > placeholder
         let images = ["/placeholder.svg?height=400&width=400"];
         
-        if (dbArt?.imageUris && dbArt.imageUris.length > 0) {
-          images = dbArt.imageUris.map(uri => ipfsToHttp(uri));
+        if (blockchainArt.ipfsImageUris && blockchainArt.ipfsImageUris.length > 0) {
+          // IPFS-enabled contract has the URIs directly
+          images = blockchainArt.ipfsImageUris.map((uri: string) => ipfsToHttp(uri));
+        } else if (dbArt?.imageUris && dbArt.imageUris.length > 0) {
+          // Legacy: get from database
+          images = dbArt.imageUris.map((uri: string) => ipfsToHttp(uri));
         }
 
         return {
@@ -86,15 +100,15 @@ export default function VerifyQueuePage() {
           id: blockchainArt.imageHash,
           imageHash: blockchainArt.imageHash,
           artist: blockchainArt.artist || dbArt?.artist || 'Unknown Artist',
-          title: dbArt?.title || `Artwork ${blockchainArt.imageHash.slice(0, 8)}...`,
+          title: blockchainArt.title || dbArt?.title || `Artwork ${blockchainArt.imageHash.slice(0, 8)}...`,
           status: blockchainArt.validated ? "validated" : ("pending" as const),
           dateSubmitted: blockchainArt.timestamp || dbArt?.timestamp || new Date().toISOString(),
           images: images,
-          description: dbArt?.description || `Blockchain Status: ${
+          description: blockchainArt.description || dbArt?.description || `Blockchain Status: ${
             blockchainArt.validated ? "Validated" : "Pending Validation"
           }\nConsensus: ${blockchainArt.consensusCount}/${blockchainArt.requiredValidators}\nOriginal: ${blockchainArt.isOriginal ? "Yes" : "No"}`,
-          additionalInfo: dbArt?.additionalInfo || `Original Author: ${blockchainArt.originalAuthor || 'Unknown'}`,
-          medium: dbArt?.medium || "Digital Art",
+          additionalInfo: blockchainArt.additionalInfo || dbArt?.additionalInfo || `Original Author: ${blockchainArt.originalAuthor || 'Unknown'}`,
+          medium: blockchainArt.medium || dbArt?.medium || "Digital Art",
           
           // Blockchain validation data (source of truth)
           consensusCount: Number(blockchainArt.consensusCount) || 0,
@@ -103,13 +117,13 @@ export default function VerifyQueuePage() {
           validated: blockchainArt.validated || false,
           originalAuthor: blockchainArt.originalAuthor || 'Unknown',
           
-          // IPFS-specific fields from database
-          imageUris: dbArt?.imageUris || [],
-          metadataUri: dbArt?.metadataUri,
+          // IPFS-specific fields from blockchain (preferred) or database fallback
+          imageUris: blockchainArt.ipfsImageUris || dbArt?.imageUris || [],
+          metadataUri: blockchainArt.ipfsMetadataUri || dbArt?.metadataUri,
           
-          // Additional metadata from database
-          year: dbArt?.year,
-          dimensions: dbArt?.dimensions,
+          // Additional metadata
+          year: blockchainArt.year || dbArt?.year,
+          dimensions: blockchainArt.dimensions || dbArt?.dimensions,
           createdAt: dbArt?.createdAt,
           timestamp: blockchainArt.timestamp
         };
@@ -118,7 +132,7 @@ export default function VerifyQueuePage() {
       // Filter to show only pending validation artworks
       const pendingArtworks = transformedArtworks.filter(art => !art.validated);
       
-      console.log(`Found ${pendingArtworks.length} artworks pending validation from blockchain`);
+      console.log(`Found ${pendingArtworks.length} artworks pending validation from ${isIPFSEnabled ? 'IPFS-enabled' : 'legacy'} blockchain`);
       
       setPendingArtworks(pendingArtworks);
       setFilteredArtworks(pendingArtworks);
