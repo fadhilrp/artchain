@@ -74,32 +74,32 @@ export function VerificationProcess({
     {
       name: "Initializing",
       icon: Brain,
-      description: "Preparing neural networks",
+      description: "Connecting to local VLM",
       duration: 1000,
+    },
+    {
+      name: "Blockchain Query",
+      icon: Database,
+      description: "Retrieving artwork from smart contract",
+      duration: 1500,
     },
     {
       name: "Image Processing",
       icon: Scan,
-      description: "Extracting visual features",
+      description: "Processing IPFS images with VLM",
       duration: 2000,
     },
     {
       name: "Pattern Recognition",
       icon: Target,
-      description: "Analyzing artistic patterns",
+      description: "VLM analyzing artistic patterns",
       duration: 1500,
     },
     {
-      name: "Database Comparison",
-      icon: Database,
-      description: "Cross-referencing global databases",
-      duration: 2500,
-    },
-    {
-      name: "Metadata Analysis",
+      name: "Similarity Analysis",
       icon: BarChart3,
-      description: "Validating provenance data",
-      duration: 1200,
+      description: "Cross-referencing with known artworks",
+      duration: 2000,
     },
     {
       name: "Final Assessment",
@@ -247,28 +247,35 @@ export function VerificationProcess({
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                 <Brain className="h-5 w-5 text-teal-600" />
-                Configure AI Model
+                Configure Local VLM Endpoint
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Provide the URL of the AI model to be used for artwork analysis.
+                Connect to your locally hosted Vision Language Model for decentralized artwork validation.
+                This ensures the validation process remains decentralized and under your control.
               </p>
               <input
                 type="text"
-                placeholder="Enter model URL (e.g., https://example.com/model)"
+                placeholder="Enter VLM endpoint URL (e.g., http://localhost:8080/api/validate)"
                 className="block w-full text-sm text-gray-600 dark:text-gray-400 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 onChange={(e) => {
                   const url = e.target.value;
-                  console.log("Entered model URL:", url);
+                  console.log("Entered VLM endpoint URL:", url);
                   // Handle URL input logic here
                 }}
               />
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Your local VLM ensures complete data privacy and decentralized validation
+                </p>
+              </div>
             </div>
             <div className="flex justify-end">
               <Button
                 onClick={() => setStep("analyzing")}
                 className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
               >
-                Next
+                Connect & Start Analysis
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -823,8 +830,10 @@ export function VerificationProcess({
             Advanced Artwork Verification
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            {step === "analyzing"
-              ? "Our AI systems are conducting comprehensive analysis"
+            {step === "import-model"
+              ? "Configure your local VLM endpoint for decentralized validation"
+              : step === "analyzing"
+              ? "Retrieving artwork from blockchain and conducting comprehensive analysis"
               : step === "results"
               ? "Review comprehensive analysis results and artwork details"
               : "Make your professional validation decision"}

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Filter, Search, Sparkles, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock, Filter, Search, Sparkles, ExternalLink, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,46 +56,75 @@ export default function VerifyQueuePage() {
   const fetchArtworks = async () => {
     try {
       setIsLoading(true);
-      const artworks = await api.getArtworks();
       
-      // Transform the data to match our interface
-      const transformedArtworks: Artwork[] = artworks.map((artwork) => {
+      // Use the blockchain endpoint that retrieves from smart contract
+      const response = await fetch('http://localhost:3001/api/artworks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch artworks from blockchain');
+      }
+      
+      const blockchainArtworks = await response.json();
+      console.log('Fetched artworks from blockchain:', blockchainArtworks);
+      
+      // Also get database artworks for additional metadata (IPFS, titles, etc.)
+      const dbArtworks = await api.getArtworks();
+      
+      // Transform and merge blockchain data with database metadata
+      const transformedArtworks: Artwork[] = blockchainArtworks.map((blockchainArt: any) => {
+        // Find matching database entry by imageHash
+        const dbArt = dbArtworks.find(db => db.imageHash === blockchainArt.imageHash);
+        
         // Use IPFS images if available, fallback to placeholder
         let images = ["/placeholder.svg?height=400&width=400"];
         
-        if (artwork.imageUris && artwork.imageUris.length > 0) {
-          images = artwork.imageUris.map(uri => ipfsToHttp(uri));
+        if (dbArt?.imageUris && dbArt.imageUris.length > 0) {
+          images = dbArt.imageUris.map(uri => ipfsToHttp(uri));
         }
 
         return {
-          ...artwork,
-          id: artwork.imageHash || artwork.id?.toString() || 'unknown',
-          title: artwork.title || `Artwork ${artwork.imageHash?.slice(0, 8)}...`,
-          artist: artwork.artist || 'Unknown Artist',
-          status: artwork.validated ? "validated" : ("pending" as const),
-          dateSubmitted: artwork.timestamp || artwork.createdAt || new Date().toISOString(),
+          // Use blockchain as source of truth for validation status
+          id: blockchainArt.imageHash,
+          imageHash: blockchainArt.imageHash,
+          artist: blockchainArt.artist || dbArt?.artist || 'Unknown Artist',
+          title: dbArt?.title || `Artwork ${blockchainArt.imageHash.slice(0, 8)}...`,
+          status: blockchainArt.validated ? "validated" : ("pending" as const),
+          dateSubmitted: blockchainArt.timestamp || dbArt?.timestamp || new Date().toISOString(),
           images: images,
-          description: artwork.description || `Validation Status: ${
-            artwork.validated ? "Validated" : "Pending"
-          }\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
-          additionalInfo: artwork.additionalInfo || `Original: ${artwork.isOriginal ? "Yes" : "No"}`,
-          medium: artwork.medium || "Digital Art",
-          consensusCount: artwork.consensusCount || 0,
-          requiredValidators: artwork.requiredValidators || 2,
-          imageHash: artwork.imageHash,
-          isOriginal: artwork.isOriginal,
-          validated: artwork.validated,
-          // IPFS-specific fields
-          imageUris: artwork.imageUris || [],
-          metadataUri: artwork.metadataUri,
+          description: dbArt?.description || `Blockchain Status: ${
+            blockchainArt.validated ? "Validated" : "Pending Validation"
+          }\nConsensus: ${blockchainArt.consensusCount}/${blockchainArt.requiredValidators}\nOriginal: ${blockchainArt.isOriginal ? "Yes" : "No"}`,
+          additionalInfo: dbArt?.additionalInfo || `Original Author: ${blockchainArt.originalAuthor || 'Unknown'}`,
+          medium: dbArt?.medium || "Digital Art",
+          
+          // Blockchain validation data (source of truth)
+          consensusCount: Number(blockchainArt.consensusCount) || 0,
+          requiredValidators: Number(blockchainArt.requiredValidators) || 2,
+          isOriginal: blockchainArt.isOriginal || false,
+          validated: blockchainArt.validated || false,
+          originalAuthor: blockchainArt.originalAuthor || 'Unknown',
+          
+          // IPFS-specific fields from database
+          imageUris: dbArt?.imageUris || [],
+          metadataUri: dbArt?.metadataUri,
+          
+          // Additional metadata from database
+          year: dbArt?.year,
+          dimensions: dbArt?.dimensions,
+          createdAt: dbArt?.createdAt,
+          timestamp: blockchainArt.timestamp
         };
       });
       
-      setPendingArtworks(transformedArtworks);
-      setFilteredArtworks(transformedArtworks);
+      // Filter to show only pending validation artworks
+      const pendingArtworks = transformedArtworks.filter(art => !art.validated);
+      
+      console.log(`Found ${pendingArtworks.length} artworks pending validation from blockchain`);
+      
+      setPendingArtworks(pendingArtworks);
+      setFilteredArtworks(pendingArtworks);
     } catch (err) {
-      setError("Failed to fetch artworks");
-      console.error("Error fetching artworks:", err);
+      setError("Failed to fetch artworks from blockchain");
+      console.error("Error fetching artworks from blockchain:", err);
     } finally {
       setIsLoading(false);
     }
@@ -259,7 +288,7 @@ export default function VerifyQueuePage() {
           </Button>
           <h1 className="text-3xl font-bold">Verification Queue</h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Review and verify submitted artworks
+            Review and verify artworks retrieved from blockchain smart contract
           </p>
         </div>
         {!validatorAddress && (
@@ -275,9 +304,15 @@ export default function VerifyQueuePage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Search
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filters & Search
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              Connected to Blockchain
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -479,6 +514,30 @@ export default function VerifyQueuePage() {
             <p className="text-gray-500">
               No artworks found matching your criteria.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Information about decentralized process */}
+      {!isLoading && (
+        <Card className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/20 dark:to-teal-950/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Shield className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  Decentralized Validation Process
+                </h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                  Artworks are retrieved directly from the blockchain smart contract using <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">getTotalArtworks()</code> and <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">getArtworkHash()</code> functions.
+                </p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  During validation, you'll connect to your local VLM (Vision Language Model) to ensure complete privacy and decentralized processing.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
