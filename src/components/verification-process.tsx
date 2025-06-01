@@ -71,12 +71,42 @@ export function VerificationProcess({
 
   // Enhanced analysis stages for sophisticated look
   const analysisStages = [
-    { name: "Initializing", icon: Brain, description: "Preparing neural networks", duration: 1000 },
-    { name: "Image Processing", icon: Scan, description: "Extracting visual features", duration: 2000 },
-    { name: "Pattern Recognition", icon: Target, description: "Analyzing artistic patterns", duration: 1500 },
-    { name: "Database Comparison", icon: Database, description: "Cross-referencing global databases", duration: 2500 },
-    { name: "Metadata Analysis", icon: BarChart3, description: "Validating provenance data", duration: 1200 },
-    { name: "Final Assessment", icon: Shield, description: "Generating confidence scores", duration: 800 },
+    {
+      name: "Initializing",
+      icon: Brain,
+      description: "Preparing neural networks",
+      duration: 1000,
+    },
+    {
+      name: "Image Processing",
+      icon: Scan,
+      description: "Extracting visual features",
+      duration: 2000,
+    },
+    {
+      name: "Pattern Recognition",
+      icon: Target,
+      description: "Analyzing artistic patterns",
+      duration: 1500,
+    },
+    {
+      name: "Database Comparison",
+      icon: Database,
+      description: "Cross-referencing global databases",
+      duration: 2500,
+    },
+    {
+      name: "Metadata Analysis",
+      icon: BarChart3,
+      description: "Validating provenance data",
+      duration: 1200,
+    },
+    {
+      name: "Final Assessment",
+      icon: Shield,
+      description: "Generating confidence scores",
+      duration: 800,
+    },
   ];
 
   // Use actual artwork data if available, otherwise fallback to mock validation status
@@ -106,7 +136,7 @@ export function VerificationProcess({
     if (step === "analyzing") {
       let currentStage = 0;
       let stageStartTime = Date.now();
-      
+
       const runStage = () => {
         if (currentStage >= analysisStages.length) {
           setTimeout(() => setStep("results"), 500);
@@ -115,13 +145,19 @@ export function VerificationProcess({
 
         const stage = analysisStages[currentStage];
         setAnalysisStage(stage.name);
-        
+
         const stageInterval = setInterval(() => {
           const elapsed = Date.now() - stageStartTime;
-          const stageProgressValue = Math.min(100, (elapsed / stage.duration) * 100);
+          const stageProgressValue = Math.min(
+            100,
+            (elapsed / stage.duration) * 100
+          );
           setStageProgress(stageProgressValue);
-          
-          const overallProgress = ((currentStage + stageProgressValue / 100) / analysisStages.length) * 100;
+
+          const overallProgress =
+            ((currentStage + stageProgressValue / 100) /
+              analysisStages.length) *
+            100;
           setAnalysisProgress(overallProgress);
 
           if (stageProgressValue >= 100) {
@@ -183,12 +219,16 @@ export function VerificationProcess({
   };
 
   const getCurrentStageIcon = () => {
-    const currentStageData = analysisStages.find(stage => stage.name === analysisStage);
+    const currentStageData = analysisStages.find(
+      (stage) => stage.name === analysisStage
+    );
     return currentStageData?.icon || Brain;
   };
 
   const getCurrentStageDescription = () => {
-    const currentStageData = analysisStages.find(stage => stage.name === analysisStage);
+    const currentStageData = analysisStages.find(
+      (stage) => stage.name === analysisStage
+    );
     return currentStageData?.description || "Processing...";
   };
 
@@ -230,22 +270,40 @@ export function VerificationProcess({
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">Overall Progress</span>
-                    <span className="font-semibold">{Math.round(analysisProgress)}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Overall Progress
+                    </span>
+                    <span className="font-semibold">
+                      {Math.round(analysisProgress)}%
+                    </span>
                   </div>
-                  <Progress value={analysisProgress} className="h-3 bg-gray-200 dark:bg-gray-700">
-                    <div className="h-full bg-gradient-to-r from-teal-500 to-blue-500 rounded-full transition-all duration-300 ease-out" 
-                         style={{ width: `${analysisProgress}%` }} />
+                  <Progress
+                    value={analysisProgress}
+                    className="h-3 bg-gray-200 dark:bg-gray-700"
+                  >
+                    <div
+                      className="h-full bg-gradient-to-r from-teal-500 to-blue-500 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${analysisProgress}%` }}
+                    />
                   </Progress>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">Current Stage</span>
-                    <span className="font-semibold">{Math.round(stageProgress)}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Current Stage
+                    </span>
+                    <span className="font-semibold">
+                      {Math.round(stageProgress)}%
+                    </span>
                   </div>
-                  <Progress value={stageProgress} className="h-2 bg-gray-100 dark:bg-gray-800">
-                    <div className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-100" 
-                         style={{ width: `${stageProgress}%` }} />
+                  <Progress
+                    value={stageProgress}
+                    className="h-2 bg-gray-100 dark:bg-gray-800"
+                  >
+                    <div
+                      className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-100"
+                      style={{ width: `${stageProgress}%` }}
+                    />
                   </Progress>
                 </div>
               </div>
@@ -254,22 +312,32 @@ export function VerificationProcess({
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mt-8">
                 {analysisStages.map((stage, index) => {
                   const isActive = stage.name === analysisStage;
-                  const isCompleted = analysisStages.findIndex(s => s.name === analysisStage) > index;
+                  const isCompleted =
+                    analysisStages.findIndex((s) => s.name === analysisStage) >
+                    index;
                   const StageIcon = stage.icon;
-                  
+
                   return (
                     <div key={stage.name} className="text-center">
-                      <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
-                        isCompleted 
-                          ? 'bg-green-500 text-white' 
-                          : isActive 
-                          ? 'bg-teal-500 text-white animate-pulse' 
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                      }`}>
+                      <div
+                        className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
+                          isCompleted
+                            ? "bg-green-500 text-white"
+                            : isActive
+                            ? "bg-teal-500 text-white animate-pulse"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                        }`}
+                      >
                         <StageIcon className="h-5 w-5" />
                       </div>
-                      <div className={`text-xs font-medium ${isActive ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500'}`}>
-                        {stage.name.replace(' ', '\n')}
+                      <div
+                        className={`text-xs font-medium ${
+                          isActive
+                            ? "text-teal-600 dark:text-teal-400"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {stage.name.replace(" ", "\n")}
                       </div>
                     </div>
                   );
@@ -279,22 +347,31 @@ export function VerificationProcess({
               {/* Real-time analysis stats */}
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-teal-600">{Math.floor(Math.random() * 50000) + 10000}</div>
+                  <div className="text-2xl font-bold text-teal-600">
+                    {Math.floor(Math.random() * 50000) + 10000}
+                  </div>
                   <div className="text-xs text-gray-500">Features Analyzed</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{Math.floor(Math.random() * 100) + 50}M</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {Math.floor(Math.random() * 100) + 50}M
+                  </div>
                   <div className="text-xs text-gray-500">Database Records</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{Math.floor(Math.random() * 10) + 5}</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {Math.floor(Math.random() * 10) + 5}
+                  </div>
                   <div className="text-xs text-gray-500">AI Models</div>
                 </div>
               </div>
 
               <p className="text-sm text-gray-500 flex items-center justify-center gap-2 mt-6">
                 <Clock className="h-4 w-4" />
-                Estimated completion: {Math.ceil((100 - analysisProgress) / 10)} seconds
+                Estimated completion: {Math.ceil(
+                  (100 - analysisProgress) / 10
+                )}{" "}
+                seconds
               </p>
             </div>
           </div>
@@ -319,13 +396,16 @@ export function VerificationProcess({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                      <img
-                        src={artwork?.images?.[0] || "/placeholder.svg"}
-                        alt={artwork?.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
+                      <div
+                        className="h-full w-full object-cover"
+                        style={{
+                          backgroundColor: `#${Math.floor(
+                            Math.random() * 16777215
+                          ).toString(16)}`,
+                        }}
+                      ></div>
                     </div>
-                    
+
                     {/* Enhanced artwork metadata */}
                     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl space-y-4">
                       <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
@@ -334,20 +414,32 @@ export function VerificationProcess({
                       </h4>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Blockchain Hash</span>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {artwork.id.substring(0, 8)}...{artwork.id.substring(artwork.id.length - 8)}
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            Blockchain Hash
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-xs"
+                          >
+                            {artwork.id.substring(0, 8)}...
+                            {artwork.id.substring(artwork.id.length - 8)}
                           </Badge>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Validation Score</span>
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            Validation Score
+                          </span>
                           <div className="flex items-center gap-2">
-                            <div className="text-sm font-bold text-green-600">98.7%</div>
+                            <div className="text-sm font-bold text-green-600">
+                              98.7%
+                            </div>
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           </div>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Risk Level</span>
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            Risk Level
+                          </span>
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                             Low Risk
                           </Badge>
@@ -355,21 +447,29 @@ export function VerificationProcess({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">{artwork?.title}</h3>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                        {artwork?.title}
+                      </h3>
                       <p className="text-teal-600 dark:text-teal-400 font-medium mb-4">
                         by {artwork?.artist}
                       </p>
 
                       <div className="grid grid-cols-2 gap-6 text-sm mb-6">
                         <div>
-                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Medium</p>
-                          <p className="text-gray-600 dark:text-gray-400">{artwork?.medium}</p>
+                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Medium
+                          </p>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            {artwork?.medium}
+                          </p>
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Submitted</p>
+                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Submitted
+                          </p>
                           <p className="text-gray-600 dark:text-gray-400">
                             {formatDate(artwork?.dateSubmitted)}
                           </p>
@@ -377,7 +477,9 @@ export function VerificationProcess({
                       </div>
 
                       <div className="mb-6">
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</p>
+                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Description
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                           {artwork?.description}
                         </p>
@@ -385,7 +487,9 @@ export function VerificationProcess({
 
                       {artwork?.additionalInfo && (
                         <div className="mb-6">
-                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Additional Information</p>
+                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Additional Information
+                          </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                             {artwork.additionalInfo}
                           </p>
@@ -401,21 +505,30 @@ export function VerificationProcess({
                           Validation Progress
                         </h4>
                         <span className="text-sm font-bold bg-white dark:bg-gray-800 px-3 py-1 rounded-full border">
-                          {validationStatus.completed} of {validationStatus.required} validators
+                          {validationStatus.completed} of{" "}
+                          {validationStatus.required} validators
                         </span>
                       </div>
                       <Progress
-                        value={(validationStatus.completed / validationStatus.required) * 100}
+                        value={
+                          (validationStatus.completed /
+                            validationStatus.required) *
+                          100
+                        }
                         className="h-3 mb-4"
                       />
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <span className="text-gray-600 dark:text-gray-400">{validationStatus.approved} Approved</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {validationStatus.approved} Approved
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span className="text-gray-600 dark:text-gray-400">{validationStatus.rejected} Rejected</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {validationStatus.rejected} Rejected
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -451,31 +564,42 @@ export function VerificationProcess({
                   Network Consensus Status
                 </h4>
                 <span className="text-sm font-bold bg-white dark:bg-gray-800 px-4 py-2 rounded-full border shadow-sm">
-                  {validationStatus.completed} of {validationStatus.required} validators
+                  {validationStatus.completed} of {validationStatus.required}{" "}
+                  validators
                 </span>
               </div>
               <Progress
-                value={(validationStatus.completed / validationStatus.required) * 100}
+                value={
+                  (validationStatus.completed / validationStatus.required) * 100
+                }
                 className="h-4 mb-4"
               />
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border">
-                  <div className="text-lg font-bold text-green-600">{validationStatus.approved}</div>
+                  <div className="text-lg font-bold text-green-600">
+                    {validationStatus.approved}
+                  </div>
                   <div className="text-gray-500">Approved</div>
                 </div>
                 <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border">
-                  <div className="text-lg font-bold text-red-600">{validationStatus.rejected}</div>
+                  <div className="text-lg font-bold text-red-600">
+                    {validationStatus.rejected}
+                  </div>
                   <div className="text-gray-500">Rejected</div>
                 </div>
                 <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border">
-                  <div className="text-lg font-bold text-gray-600">{validationStatus.required - validationStatus.completed}</div>
+                  <div className="text-lg font-bold text-gray-600">
+                    {validationStatus.required - validationStatus.completed}
+                  </div>
                   <div className="text-gray-500">Pending</div>
                 </div>
               </div>
               <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  This artwork requires validation from {validationStatus.required} validators before a final decision is made
+                  This artwork requires validation from{" "}
+                  {validationStatus.required} validators before a final decision
+                  is made
                 </p>
               </div>
             </div>
@@ -494,7 +618,11 @@ export function VerificationProcess({
                 className="space-y-4"
               >
                 <div className="flex items-center space-x-4 rounded-xl border-2 p-4 hover:bg-green-50 dark:hover:bg-green-950/20 transition-all duration-200 hover:border-green-300 dark:hover:border-green-700">
-                  <RadioGroupItem value="approve" id="approve" className="border-2" />
+                  <RadioGroupItem
+                    value="approve"
+                    id="approve"
+                    className="border-2"
+                  />
                   <Label
                     htmlFor="approve"
                     className="flex items-center cursor-pointer flex-1"
@@ -504,7 +632,9 @@ export function VerificationProcess({
                         <CheckCircle className="h-6 w-6 text-green-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">Approve Artwork</p>
+                        <p className="font-semibold text-gray-800 dark:text-gray-200">
+                          Approve Artwork
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           Artwork meets authenticity and quality criteria
                         </p>
@@ -514,7 +644,11 @@ export function VerificationProcess({
                 </div>
 
                 <div className="flex items-center space-x-4 rounded-xl border-2 p-4 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 hover:border-red-300 dark:hover:border-red-700">
-                  <RadioGroupItem value="reject" id="reject" className="border-2" />
+                  <RadioGroupItem
+                    value="reject"
+                    id="reject"
+                    className="border-2"
+                  />
                   <Label
                     htmlFor="reject"
                     className="flex items-center cursor-pointer flex-1"
@@ -524,7 +658,9 @@ export function VerificationProcess({
                         <XCircle className="h-6 w-6 text-red-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">Reject Artwork</p>
+                        <p className="font-semibold text-gray-800 dark:text-gray-200">
+                          Reject Artwork
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           Artwork does not meet authenticity or quality criteria
                         </p>
@@ -537,11 +673,15 @@ export function VerificationProcess({
 
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
               <div className="space-y-3 mb-4">
-                <Label htmlFor="feedback" className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <Label
+                  htmlFor="feedback"
+                  className="text-lg font-semibold text-gray-800 dark:text-gray-200"
+                >
                   Detailed Feedback for Artist
                 </Label>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Provide constructive feedback that will help the artist understand your decision.
+                  Provide constructive feedback that will help the artist
+                  understand your decision.
                 </p>
               </div>
               <Textarea
@@ -554,7 +694,8 @@ export function VerificationProcess({
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  This feedback will be visible to the artist and will contribute to the artwork's permanent record
+                  This feedback will be visible to the artist and will
+                  contribute to the artwork's permanent record
                 </p>
               </div>
             </div>
@@ -608,8 +749,8 @@ export function VerificationProcess({
         <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-700">
           {step === "decision" ? (
             <div className="flex justify-between w-full">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setStep("results")}
                 className="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
@@ -639,8 +780,8 @@ export function VerificationProcess({
               </Button>
             </div>
           ) : step === "results" ? (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={onClose}
               className="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
