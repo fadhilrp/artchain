@@ -11,6 +11,7 @@ import {
   Download,
   Users,
   Shield,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,14 @@ interface UserArtworkListProps {
   filter?: "all" | "verified" | "pending" | "rejected";
 }
 
+// Helper function to convert IPFS URI to HTTP URL
+const ipfsToHttp = (uri: string): string => {
+  if (uri.startsWith("ipfs://")) {
+    return uri.replace("ipfs://", "https://ipfs.io/ipfs/");
+  }
+  return uri;
+};
+
 export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<any[]>([]);
@@ -40,33 +49,53 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
       .then(res => res.json())
       .then(data => {
         setSubmissions(
-          data.map((artwork: any) => ({
-            id: artwork.id,
-            title: artwork.title,
-            dateSubmitted: artwork.metadata?.timestamp || artwork.createdAt,
-            status: artwork.consensus
-              ? (artwork.isDuplicate ? "rejected" : "verified")
-              : "pending",
-            medium: artwork.metadata?.medium || "Unknown",
-            images: ["/placeholder.svg"], // No image storage yet
-            description: artwork.metadata?.description || "",
-            feedback: artwork.isDuplicate ? "Duplicate artwork detected." : null,
-            tokenId: null,
-            transactionHash: null,
-            validationStatus: {
-              required: 11,
-              completed: artwork.consensus ? 11 : 5,
-              approved: artwork.isDuplicate ? 3 : 9,
-              rejected: artwork.isDuplicate ? 8 : 2,
-              status: artwork.consensus
-                ? (artwork.isDuplicate ? "rejected" : "approved")
-                : "in_progress",
-              validators: [],
-              consensusReached: artwork.consensus,
-              consensusDate: artwork.metadata?.timestamp || artwork.createdAt,
-            },
-          }))
+          data.map((artwork: any) => {
+            // Use IPFS images if available, fallback to placeholder
+            let images = ["/placeholder.svg?height=400&width=400"];
+            
+            if (artwork.imageUris && artwork.imageUris.length > 0) {
+              images = artwork.imageUris.map((uri: string) => ipfsToHttp(uri));
+            }
+
+            return {
+              id: artwork.id,
+              title: artwork.title || `Artwork ${artwork.imageHash?.slice(0, 8)}...`,
+              dateSubmitted: artwork.timestamp || artwork.createdAt,
+              status: artwork.validated
+                ? (artwork.isOriginal ? "verified" : "rejected")
+                : "pending",
+              medium: artwork.medium || "Unknown",
+              images: images,
+              description: artwork.description || "",
+              feedback: !artwork.isOriginal ? "Not original artwork detected." : null,
+              tokenId: null,
+              transactionHash: null,
+              // IPFS fields
+              imageUris: artwork.imageUris || [],
+              metadataUri: artwork.metadataUri,
+              imageHash: artwork.imageHash,
+              artist: artwork.artist,
+              year: artwork.year,
+              dimensions: artwork.dimensions,
+              additionalInfo: artwork.additionalInfo,
+              validationStatus: {
+                required: artwork.requiredValidators || 2,
+                completed: artwork.consensusCount || 0,
+                approved: artwork.isOriginal ? artwork.consensusCount : 0,
+                rejected: artwork.isOriginal ? 0 : artwork.consensusCount,
+                status: artwork.validated
+                  ? (artwork.isOriginal ? "approved" : "rejected")
+                  : "in_progress",
+                validators: [],
+                consensusReached: artwork.validated,
+                consensusDate: artwork.timestamp || artwork.createdAt,
+              },
+            };
+          })
         );
+      })
+      .catch(error => {
+        console.error('Error fetching artworks:', error);
       });
   }, []);
 
@@ -160,6 +189,10 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
               src={submission.images[0] || "/placeholder.svg"}
               alt={submission.title}
               className="h-full w-full object-cover"
+              onError={(e) => {
+                // Fallback to placeholder if IPFS image fails to load
+                (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+              }}
             />
             <div className="absolute top-2 right-2">
               {submission.validationStatus ? (
@@ -178,6 +211,25 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
                 getStatusBadge(submission.status)
               )}
             </div>
+            
+            {/* Show IPFS indicator */}
+            {submission.imageUris && submission.imageUris.length > 0 && (
+              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                📡 IPFS
+                {submission.metadataUri && (
+                  <a
+                    href={ipfsToHttp(submission.metadataUri)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-blue-300"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+            )}
+
             {submission.validationStatus && (
               <div className="absolute bottom-2 left-2 right-2 bg-black/60 text-white p-2 rounded flex items-center justify-between">
                 <div className="flex items-center gap-1">
@@ -199,163 +251,230 @@ export function UserArtworkList({ filter = "all" }: UserArtworkListProps) {
               </div>
             )}
           </div>
+
           <div className="p-4">
-            <h3 className="font-medium truncate">{submission.title}</h3>
-            <p className="text-sm text-gray-500">
-              Submitted: {formatDate(submission.dateSubmitted)}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full mt-3"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedArtwork(submission);
-              }}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </Button>
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm truncate">
+                  {submission.title}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {formatDate(submission.dateSubmitted)}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedArtwork(submission);
+                }}
+              >
+                <Eye className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="text-xs">
+                {submission.medium}
+              </Badge>
+              {submission.imageUris && submission.imageUris.length > 1 && (
+                <span className="text-xs text-gray-500">
+                  +{submission.imageUris.length - 1} more
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}
 
-      <Dialog
-        open={!!selectedArtwork}
-        onOpenChange={(open) => !open && setSelectedArtwork(null)}
-      >
-        <DialogContent className="max-w-3xl">
-          {selectedArtwork && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selectedArtwork.title}</DialogTitle>
-                <DialogDescription>
-                  Submitted on {formatDate(selectedArtwork.dateSubmitted)}
-                </DialogDescription>
-              </DialogHeader>
+      {/* Artwork Detail Modal */}
+      {selectedArtwork && (
+        <Dialog open={!!selectedArtwork} onOpenChange={() => setSelectedArtwork(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedArtwork.title}
+                {selectedArtwork.imageUris && selectedArtwork.imageUris.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    📡 IPFS
+                  </Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                Submitted on {formatDate(selectedArtwork.dateSubmitted)}
+              </DialogDescription>
+            </DialogHeader>
 
-              <Tabs defaultValue="details">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="details">Artwork Details</TabsTrigger>
-                  <TabsTrigger value="validation">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Validation
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="validation">Validation</TabsTrigger>
+                <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="details">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                    <div>
+              <TabsContent value="details" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="aspect-square overflow-hidden rounded-lg border">
                       <img
                         src={selectedArtwork.images[0] || "/placeholder.svg"}
                         alt={selectedArtwork.title}
-                        className="w-full h-auto rounded-md"
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+                        }}
                       />
                     </div>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">Status</h4>
-                        {selectedArtwork.validationStatus ? (
-                          <ValidationProgressBadge
-                            completed={
-                              selectedArtwork.validationStatus.completed
-                            }
-                            required={selectedArtwork.validationStatus.required}
-                            status={
-                              selectedArtwork.validationStatus.status as
-                                | "pending"
-                                | "in_progress"
-                                | "approved"
-                                | "rejected"
-                            }
-                          />
-                        ) : (
-                          getStatusBadge(selectedArtwork.status)
+                    
+                    {/* Additional IPFS Images */}
+                    {selectedArtwork.imageUris && selectedArtwork.imageUris.length > 1 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedArtwork.imageUris.slice(1, 4).map((uri: string, index: number) => (
+                          <div key={index} className="aspect-square overflow-hidden rounded border">
+                            <img
+                              src={ipfsToHttp(uri)}
+                              alt={`${selectedArtwork.title} ${index + 2}`}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/placeholder.svg?height=200&width=200";
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-2">Artwork Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Status:</span>
+                          {getStatusBadge(selectedArtwork.status)}
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Medium:</span>
+                          <span>{selectedArtwork.medium}</span>
+                        </div>
+                        {selectedArtwork.artist && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Artist:</span>
+                            <span>{selectedArtwork.artist}</span>
+                          </div>
+                        )}
+                        {selectedArtwork.year && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Year:</span>
+                            <span>{selectedArtwork.year}</span>
+                          </div>
+                        )}
+                        {selectedArtwork.dimensions && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Dimensions:</span>
+                            <span>{selectedArtwork.dimensions}</span>
+                          </div>
                         )}
                       </div>
+                    </div>
 
+                    {selectedArtwork.description && (
                       <div>
-                        <h4 className="text-sm font-medium mb-1">Medium</h4>
-                        <p className="text-sm text-gray-500">
-                          {selectedArtwork.medium}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">
-                          Description
-                        </h4>
-                        <p className="text-sm text-gray-500">
+                        <h4 className="font-semibold mb-2">Description</h4>
+                        <p className="text-sm text-gray-600">
                           {selectedArtwork.description}
                         </p>
                       </div>
+                    )}
 
-                      {selectedArtwork.feedback && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">
-                            Validator Feedback
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {selectedArtwork.feedback}
-                          </p>
+                    {selectedArtwork.additionalInfo && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Additional Information</h4>
+                        <p className="text-sm text-gray-600">
+                          {selectedArtwork.additionalInfo}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* IPFS Links */}
+                    {(selectedArtwork.imageUris && selectedArtwork.imageUris.length > 0) || selectedArtwork.metadataUri && (
+                      <div>
+                        <h4 className="font-semibold mb-2">IPFS Storage</h4>
+                        <div className="space-y-2 text-sm">
+                          {selectedArtwork.metadataUri && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-500">Metadata:</span>
+                              <a
+                                href={ipfsToHttp(selectedArtwork.metadataUri)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline flex items-center gap-1"
+                              >
+                                View JSON <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                          {selectedArtwork.imageUris && selectedArtwork.imageUris.length > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-500">Images:</span>
+                              <span>{selectedArtwork.imageUris.length} stored on IPFS</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedArtwork.feedback && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Feedback</h4>
+                        <p className="text-sm text-red-600">
+                          {selectedArtwork.feedback}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="validation">
+                {selectedArtwork.validationStatus && (
+                  <ArtworkValidationStatus
+                    artworkId={selectedArtwork.id}
+                    validationStatus={selectedArtwork.validationStatus}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="blockchain">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Blockchain Information</h4>
+                    <div className="space-y-2 text-sm">
+                      {selectedArtwork.imageHash && (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-gray-500">Image Hash:</span>
+                          <code className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono break-all">
+                            {selectedArtwork.imageHash}
+                          </code>
                         </div>
                       )}
-
-                      {selectedArtwork.status === "verified" && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">
-                            Blockchain Information
-                          </h4>
-                          <div className="text-sm text-gray-500 space-y-1">
-                            <p>Token ID: {selectedArtwork.tokenId}</p>
-                            <p>
-                              Transaction: {selectedArtwork.transactionHash}
-                            </p>
-                          </div>
-                          <div className="flex space-x-2 mt-4">
-                            <Button
-                              size="sm"
-                              className="bg-teal-600 hover:bg-teal-700"
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Certificate
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </Button>
-                          </div>
-                        </div>
-                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Validation Status:</span>
+                        <span>{selectedArtwork.validationStatus?.consensusReached ? 'Complete' : 'In Progress'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Consensus:</span>
+                        <span>{selectedArtwork.validationStatus?.completed || 0}/{selectedArtwork.validationStatus?.required || 2}</span>
+                      </div>
                     </div>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="validation">
-                  {selectedArtwork.validationStatus && (
-                    <ArtworkValidationStatus
-                      artworkId={selectedArtwork.id}
-                      validationStatus={
-                        selectedArtwork.validationStatus
-                          ? {
-                              ...selectedArtwork.validationStatus,
-                              status: selectedArtwork.validationStatus
-                                .status as
-                                | "approved"
-                                | "pending"
-                                | "in_progress"
-                                | "rejected",
-                            }
-                          : undefined
-                      }
-                    />
-                  )}
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

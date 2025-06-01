@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Filter, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, Clock, Filter, Search, Sparkles, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,81 +27,13 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
 
-// Mock data for pending verifications
-const mockPendingArtworks = [
-  {
-    id: "art-101",
-    title: "Urban Landscape #3",
-    artist: "James Wilson",
-    dateSubmitted: "2025-05-12T09:15:00Z",
-    status: "pending",
-    medium: "Acrylic on canvas",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "A contemporary view of city architecture and human interaction.",
-    additionalInfo:
-      "Created during my residency in New York. This is part of a series exploring urban environments.",
-  },
-  {
-    id: "art-102",
-    title: "Serenity in Blue",
-    artist: "Maria Chen",
-    dateSubmitted: "2025-05-11T14:22:00Z",
-    status: "pending",
-    medium: "Oil on canvas",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description: "An abstract exploration of emotions through shades of blue.",
-    additionalInfo: "Inspired by my travels to coastal regions.",
-  },
-  {
-    id: "art-103",
-    title: "Digital Dystopia",
-    artist: "Alex Rodriguez",
-    dateSubmitted: "2025-05-10T16:45:00Z",
-    status: "pending",
-    medium: "Digital Art",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description: "A commentary on technology's impact on society.",
-    additionalInfo:
-      "Created using a combination of 3D modeling and digital painting techniques.",
-  },
-  {
-    id: "art-104",
-    title: "Forest Whispers",
-    artist: "Emma Johnson",
-    dateSubmitted: "2025-05-09T11:30:00Z",
-    status: "pending",
-    medium: "Watercolor",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "A serene forest scene capturing the interplay of light through trees.",
-    additionalInfo: "Painted on location in the Pacific Northwest.",
-  },
-  {
-    id: "art-105",
-    title: "Geometric Harmony",
-    artist: "David Lee",
-    dateSubmitted: "2025-05-08T10:15:00Z",
-    status: "pending",
-    medium: "Digital Art",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description: "An exploration of geometric shapes and patterns in harmony.",
-    additionalInfo:
-      "Created using custom algorithms and digital painting techniques.",
-  },
-  {
-    id: "art-106",
-    title: "Autumn Reflections",
-    artist: "Sarah Miller",
-    dateSubmitted: "2025-05-07T16:30:00Z",
-    status: "pending",
-    medium: "Oil on canvas",
-    images: ["/placeholder.svg?height=400&width=400"],
-    description:
-      "A landscape capturing the vibrant colors of autumn reflected in a still lake.",
-    additionalInfo: "Painted en plein air during a trip to Vermont.",
-  },
-];
+// Helper function to convert IPFS URI to HTTP URL
+const ipfsToHttp = (uri: string): string => {
+  if (uri.startsWith("ipfs://")) {
+    return uri.replace("ipfs://", "https://ipfs.io/ipfs/");
+  }
+  return uri;
+};
 
 export default function VerifyQueuePage() {
   const router = useRouter();
@@ -125,26 +57,40 @@ export default function VerifyQueuePage() {
     try {
       setIsLoading(true);
       const artworks = await api.getArtworks();
+      
       // Transform the data to match our interface
-      const transformedArtworks: Artwork[] = artworks.map((artwork) => ({
-        ...artwork,
-        id: artwork.imageHash,
-        title: `Artwork ${artwork.imageHash.slice(0, 8)}...`,
-        artist: artwork.artist,
-        status: artwork.validated ? "validated" : ("pending" as const),
-        dateSubmitted: artwork.timestamp || new Date().toISOString(),
-        images: [`https://ipfs.io/ipfs/${artwork.imageHash}`],
-        description: `Validation Status: ${
-          artwork.validated ? "Validated" : "Pending"
-        }\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
-        additionalInfo: `Original: ${artwork.isOriginal ? "Yes" : "No"}`,
-        medium: "Blockchain Art",
-        consensusCount: artwork.consensusCount || 0,
-        requiredValidators: artwork.requiredValidators || 2,
-        imageHash: artwork.imageHash,
-        isOriginal: artwork.isOriginal,
-        validated: artwork.validated,
-      }));
+      const transformedArtworks: Artwork[] = artworks.map((artwork) => {
+        // Use IPFS images if available, fallback to placeholder
+        let images = ["/placeholder.svg?height=400&width=400"];
+        
+        if (artwork.imageUris && artwork.imageUris.length > 0) {
+          images = artwork.imageUris.map(uri => ipfsToHttp(uri));
+        }
+
+        return {
+          ...artwork,
+          id: artwork.imageHash || artwork.id?.toString() || 'unknown',
+          title: artwork.title || `Artwork ${artwork.imageHash?.slice(0, 8)}...`,
+          artist: artwork.artist || 'Unknown Artist',
+          status: artwork.validated ? "validated" : ("pending" as const),
+          dateSubmitted: artwork.timestamp || artwork.createdAt || new Date().toISOString(),
+          images: images,
+          description: artwork.description || `Validation Status: ${
+            artwork.validated ? "Validated" : "Pending"
+          }\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
+          additionalInfo: artwork.additionalInfo || `Original: ${artwork.isOriginal ? "Yes" : "No"}`,
+          medium: artwork.medium || "Digital Art",
+          consensusCount: artwork.consensusCount || 0,
+          requiredValidators: artwork.requiredValidators || 2,
+          imageHash: artwork.imageHash,
+          isOriginal: artwork.isOriginal,
+          validated: artwork.validated,
+          // IPFS-specific fields
+          imageUris: artwork.imageUris || [],
+          metadataUri: artwork.metadataUri,
+        };
+      });
+      
       setPendingArtworks(transformedArtworks);
       setFilteredArtworks(transformedArtworks);
     } catch (err) {
@@ -198,18 +144,14 @@ export default function VerifyQueuePage() {
     if (selectedArtworks.length === filteredArtworks.length) {
       setSelectedArtworks([]);
     } else {
-      setSelectedArtworks(filteredArtworks.map((artwork) => artwork.id));
+      setSelectedArtworks(filteredArtworks.map((item) => item.id));
     }
   };
 
   const handleSelectArtwork = (id: string) => {
-    if (selectedArtworks.includes(id)) {
-      setSelectedArtworks(
-        selectedArtworks.filter((artworkId) => artworkId !== id)
-      );
-    } else {
-      setSelectedArtworks([...selectedArtworks, id]);
-    }
+    setSelectedArtworks((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   const handleVerifySelected = () => {
@@ -217,15 +159,8 @@ export default function VerifyQueuePage() {
       alert("Please select at least one artwork to verify");
       return;
     }
-
-    // Find the first selected artwork to start verification
-    const firstSelected = pendingArtworks.find(
-      (artwork) => artwork.id === selectedArtworks[0]
-    );
-    if (firstSelected) {
-      setSelectedArtwork(firstSelected);
-      setIsVerifying(true);
-    }
+    // Logic for batch verification
+    setIsVerifying(true);
   };
 
   const handleVerificationComplete = async (
@@ -239,293 +174,324 @@ export default function VerifyQueuePage() {
     }
 
     try {
-      const artwork = pendingArtworks.find((a) => a.id === artworkId);
-      if (!artwork) return;
-
-      await api.validateArtwork(
-        artwork.imageHash,
-        isApproved,
-        isApproved ? artwork.artist : feedback,
-        validatorAddress
-      );
-
-      // Remove the verified artwork from selected and pending lists
-      setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId));
-      setPendingArtworks(
-        pendingArtworks.filter((artwork) => artwork.id !== artworkId)
-      );
-
-      // If there are more selected artworks, continue to the next one
-      const remainingSelected = selectedArtworks.filter(
-        (id) => id !== artworkId
-      );
-      if (remainingSelected.length > 0) {
-        const nextArtwork = pendingArtworks.find(
-          (artwork) => artwork.id === remainingSelected[0]
-        );
-        if (nextArtwork) {
-          setSelectedArtwork(nextArtwork);
-        } else {
-          setIsVerifying(false);
-          setSelectedArtwork(null);
-        }
-      } else {
-        setIsVerifying(false);
-        setSelectedArtwork(null);
+      const artwork = pendingArtworks.find((art) => art.id === artworkId);
+      if (!artwork) {
+        throw new Error("Artwork not found");
       }
-      // Refresh the artwork list
+
+      const validationData = {
+        imageHash: artwork.imageHash,
+        isOriginal: isApproved,
+        originalAuthor: isApproved ? artwork.artist : "Unknown",
+        validatorAddress: validatorAddress,
+      };
+
+      console.log("Submitting validation:", validationData);
+
+      const response = await fetch("http://localhost:3001/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Validation failed");
+      }
+
+      const result = await response.json();
+      console.log("Validation result:", result);
+
+      toast.success(
+        `Artwork ${isApproved ? "approved" : "rejected"} successfully!`
+      );
+
+      // Refresh the artworks list
       await fetchArtworks();
-      toast.success("Artwork validated successfully");
-    } catch (err) {
-      console.error("Error validating artwork:", err);
-      if (err instanceof ValidationError) {
-        if (err.code === "ALREADY_VOTED") {
-          toast.error("You have already validated this artwork");
-        } else {
-          toast.error(err.message);
-        }
+
+      // Close the verification modal
+      setSelectedArtwork(null);
+    } catch (error) {
+      console.error("Validation error:", error);
+      if (error instanceof ValidationError) {
+        toast.error(`Validation failed: ${error.message}`);
       } else {
-        toast.error("Failed to validate artwork. Please try again.");
+        toast.error(
+          `Validation failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
     }
   };
 
   const handleCancelVerification = () => {
-    setIsVerifying(false);
     setSelectedArtwork(null);
+    setIsVerifying(false);
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            className="mr-2 flex items-center text-sm"
-            onClick={() => router.push("/app")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Artwork Verification</h1>
-        </div>
-        <div className="flex gap-2">
-          <ConnectButton />
-          <Button
-            className="bg-teal-600 hover:bg-teal-700"
-            onClick={handleVerifySelected}
-            disabled={selectedArtworks.length === 0 || !validatorAddress}
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Verify Selected ({selectedArtworks.length})
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center">
+          <p className="text-red-600">Error: {error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
           </Button>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Button
+            variant="ghost"
+            className="mb-4 flex items-center text-sm"
+            onClick={() => router.push("/app")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-3xl font-bold">Verification Queue</h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Review and verify submitted artworks
+          </p>
+        </div>
+        {!validatorAddress && (
+          <div className="flex flex-col items-end space-y-2">
+            <ConnectButton />
+            <p className="text-sm text-gray-500">
+              Connect wallet to validate artworks
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Pending Artwork</CardTitle>
-          <CardDescription>
-            Verify artwork authenticity using AI-powered analysis
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters & Search
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search by title or artist..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* <div className="flex gap-2">
-              <div className="w-40">
-                <Select value={filterMedium} onValueChange={setFilterMedium}>
-                  <SelectTrigger>
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Mediums</SelectItem>
-                    <SelectItem value="oil">Oil Painting</SelectItem>
-                    <SelectItem value="acrylic">Acrylic</SelectItem>
-                    <SelectItem value="watercolor">Watercolor</SelectItem>
-                    <SelectItem value="digital">Digital Art</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by title or artist..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            </div> */}
+            </div>
+            <Select value={filterMedium} onValueChange={setFilterMedium}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by medium" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Mediums</SelectItem>
+                <SelectItem value="oil">Oil Painting</SelectItem>
+                <SelectItem value="acrylic">Acrylic</SelectItem>
+                <SelectItem value="digital">Digital Art</SelectItem>
+                <SelectItem value="photography">Photography</SelectItem>
+                <SelectItem value="sculpture">Sculpture</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          {isLoading ? (
-            <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
-              <p className="text-gray-500">Loading verification queue...</p>
-            </div>
-          ) : filteredArtworks.length === 0 ? (
-            <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
-              <p className="text-gray-500">
-                {pendingArtworks.length === 0
-                  ? "No artworks available for verification"
-                  : "No artworks match your filters"}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
-                        <div className="flex items-center">
-                          <Checkbox
-                            checked={
-                              filteredArtworks.length > 0 &&
-                              selectedArtworks.length ===
-                                filteredArtworks.length
-                            }
-                            onCheckedChange={handleSelectAll}
-                            aria-label="Select all"
-                          />
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Artwork
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Artist
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Submitted
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {filteredArtworks.map((artwork) => (
-                      <tr
-                        key={artwork.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-900"
-                      >
-                        <td className="px-4 py-3">
-                          <Checkbox
-                            checked={selectedArtworks.includes(artwork.id)}
-                            onCheckedChange={() =>
-                              handleSelectArtwork(artwork.id)
-                            }
-                            aria-label={`Select ${artwork.title}`}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-md overflow-hidden flex-shrink-0">
-                              <div
-                                className="h-full w-full object-cover"
-                                style={{
-                                  backgroundColor: `#${Math.floor(
-                                    Math.random() * 16777215
-                                  ).toString(16)}`,
-                                }}
-                              ></div>
-                            </div>
-                            <div className="truncate max-w-[200px]">
-                              <p className="text-sm font-medium truncate">
-                                {artwork?.title}
-                              </p>
-                              {/* <p className="text-xs text-gray-500 truncate">
-                                {artwork?.description.substring(0, 50)}...
-                              </p> */}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm">{artwork.artist}</td>
-                        <td className="px-4 py-3 text-sm">
-                          {formatDate(artwork.dateSubmitted)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            className={`flex items-center gap-1 ${
-                              artwork.status === "validated"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 "
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 "
-                            }`}
-                          >
-                            <Clock className="h-3 w-3" />
-                            {artwork.status.charAt(0).toUpperCase() +
-                              artwork.status.slice(1)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          {artwork.status !== "validated" && (
-                            <Button
-                              size="sm"
-                              className="bg-teal-600 hover:bg-teal-700"
-                              onClick={() => {
-                                setSelectedArtwork(artwork);
-                                setIsVerifying(true);
-                              }}
-                            >
-                              <Sparkles className="h-3 w-3 mr-1" />
-                              Verify
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex justify-between items-center mt-4">
-                <div className="text-sm text-gray-500">
-                  {selectedArtworks.length} of {filteredArtworks.length}{" "}
-                  selected
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedArtworks([])}
-                  >
-                    Clear Selection
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-teal-600 hover:bg-teal-700"
-                    onClick={handleVerifySelected}
-                    disabled={selectedArtworks.length === 0}
-                  >
-                    <Sparkles className="mr-2 h-3 w-3" />
-                    Verify Selected
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
 
-      {isVerifying && selectedArtwork && (
+      {/* Bulk Actions */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Checkbox
+                checked={
+                  selectedArtworks.length === filteredArtworks.length &&
+                  filteredArtworks.length > 0
+                }
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-gray-600">
+                {selectedArtworks.length} of {filteredArtworks.length} selected
+              </span>
+            </div>
+            {selectedArtworks.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedArtworks([])}
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleVerifySelected}
+                  disabled={!validatorAddress}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Verify Selected
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Artworks Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+              <CardContent className="p-4 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredArtworks.map((artwork) => (
+            <Card
+              key={artwork.id}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                selectedArtworks.includes(artwork.id)
+                  ? "ring-2 ring-blue-500"
+                  : ""
+              }`}
+              onClick={() => handleSelectArtwork(artwork.id)}
+            >
+              <div className="relative">
+                <img
+                  src={artwork.images[0]}
+                  alt={artwork.title}
+                  className="w-full h-48 object-cover rounded-t-lg"
+                  onError={(e) => {
+                    // Fallback to placeholder if IPFS image fails to load
+                    (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+                  }}
+                />
+                <div className="absolute top-2 left-2">
+                  <Checkbox
+                    checked={selectedArtworks.includes(artwork.id)}
+                    onCheckedChange={() => handleSelectArtwork(artwork.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="absolute top-2 right-2">
+                  <Badge
+                    variant={
+                      artwork.status === "validated" ? "default" : "secondary"
+                    }
+                  >
+                    {artwork.status === "validated" ? "Validated" : "Pending"}
+                  </Badge>
+                </div>
+                {/* Show IPFS indicator */}
+                {artwork.imageUris && artwork.imageUris.length > 0 && (
+                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                    📡 IPFS
+                    {artwork.metadataUri && (
+                      <a
+                        href={ipfsToHttp(artwork.metadataUri)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:text-blue-300"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold truncate">{artwork.title}</h3>
+                    <p className="text-sm text-gray-600 truncate">
+                      by {artwork.artist}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-gray-500">
+                    <Clock className="inline h-3 w-3 mr-1" />
+                    {formatDate(artwork.dateSubmitted)}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                  {artwork.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-xs">
+                    {artwork.medium}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedArtwork(artwork);
+                    }}
+                    disabled={!validatorAddress}
+                  >
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Review
+                  </Button>
+                </div>
+                {/* Additional IPFS info */}
+                {artwork.imageUris && artwork.imageUris.length > 1 && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    +{artwork.imageUris.length - 1} more images stored on IPFS
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {filteredArtworks.length === 0 && !isLoading && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500">
+              No artworks found matching your criteria.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Verification Modal */}
+      {selectedArtwork && (
         <VerificationProcess
           artwork={selectedArtwork}
-          isOpen={isVerifying}
+          isOpen={true}
           onClose={handleCancelVerification}
           onComplete={handleVerificationComplete}
-          totalSelected={selectedArtworks.length}
-          currentIndex={selectedArtworks.indexOf(selectedArtwork.id) + 1}
+          totalSelected={1}
+          currentIndex={1}
         />
       )}
     </div>
