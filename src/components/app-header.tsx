@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Coins,
   Code,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -50,6 +51,7 @@ export function AppHeader() {
             href="/app/upload"
             className="text-sm font-medium hover:text-teal-600 transition-colors"
           >
+            <Upload className="h-4 w-4 inline mr-1" />
             Upload Art
           </Link>
           {/* <Link
@@ -110,6 +112,7 @@ export function AppHeader() {
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <Upload className="h-4 w-4 inline mr-1" />
                 Upload Art
               </Link>
               {/* <Link
@@ -127,14 +130,14 @@ export function AppHeader() {
                 <ClipboardList className="h-4 w-4 inline mr-1" />
                 Verification
               </Link>
-              <Link
+              {/* <Link
                 href="/app/rewards"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Coins className="h-4 w-4 inline mr-1" />
                 Rewards
-              </Link>
+              </Link> */}
               {/* <Link
                 href="/app/api-demo"
                 className="text-sm font-medium hover:text-teal-600 transition-colors py-2"
