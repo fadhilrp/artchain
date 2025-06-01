@@ -1,19 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Clock, Filter, Search, Sparkles } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { VerificationProcess } from "@/components/verification-process"
-import { api, Artwork, ValidationError } from "@/lib/api"
-import { useAccount } from "wagmi"
-import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Clock, Filter, Search, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { VerificationProcess } from "@/components/verification-process";
+import { api, Artwork, ValidationError } from "@/lib/api";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { toast } from "sonner";
 
 // Mock data for pending verifications
 const mockPendingArtworks = [
@@ -92,49 +104,51 @@ const mockPendingArtworks = [
 ];
 
 export default function VerifyQueuePage() {
-  const router = useRouter()
-  const { address: validatorAddress } = useAccount()
-  const [pendingArtworks, setPendingArtworks] = useState<Artwork[]>([])
-  const [filteredArtworks, setFilteredArtworks] = useState<Artwork[]>([])
-  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterMedium, setFilterMedium] = useState("all")
-  const [sortOrder, setSortOrder] = useState("newest")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const { address: validatorAddress } = useAccount();
+  const [pendingArtworks, setPendingArtworks] = useState<Artwork[]>([]);
+  const [filteredArtworks, setFilteredArtworks] = useState<Artwork[]>([]);
+  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterMedium, setFilterMedium] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchArtworks()
-  }, [])
+    fetchArtworks();
+  }, []);
 
   const fetchArtworks = async () => {
     try {
-      setIsLoading(true)
-      const artworks = await api.getArtworks()
+      setIsLoading(true);
+      const artworks = await api.getArtworks();
       // Transform the data to match our interface
-      const transformedArtworks: Artwork[] = artworks.map(artwork => ({
+      const transformedArtworks: Artwork[] = artworks.map((artwork) => ({
         ...artwork,
         id: artwork.imageHash,
         title: `Artwork ${artwork.imageHash.slice(0, 8)}...`,
-        artist: artwork.originalAuthor,
-        status: artwork.validated ? 'validated' : 'pending' as const,
+        artist: artwork.artist,
+        status: artwork.validated ? "validated" : ("pending" as const),
         dateSubmitted: artwork.timestamp || new Date().toISOString(),
         images: [`https://ipfs.io/ipfs/${artwork.imageHash}`],
-        description: `Validation Status: ${artwork.validated ? 'Validated' : 'Pending'}\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
-        additionalInfo: `Original: ${artwork.isOriginal ? 'Yes' : 'No'}`,
-        medium: 'Blockchain Art',
-      }))
-      setPendingArtworks(transformedArtworks)
-      setFilteredArtworks(transformedArtworks)
+        description: `Validation Status: ${
+          artwork.validated ? "Validated" : "Pending"
+        }\nConsensus: ${artwork.consensusCount}/${artwork.requiredValidators}`,
+        additionalInfo: `Original: ${artwork.isOriginal ? "Yes" : "No"}`,
+        medium: "Blockchain Art",
+      }));
+      setPendingArtworks(transformedArtworks);
+      setFilteredArtworks(transformedArtworks);
     } catch (err) {
-      setError('Failed to fetch artworks')
-      console.error('Error fetching artworks:', err)
+      setError("Failed to fetch artworks");
+      console.error("Error fetching artworks:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     let result = [...pendingArtworks];
@@ -209,54 +223,64 @@ export default function VerifyQueuePage() {
     }
   };
 
-  const handleVerificationComplete = async (artworkId: string, isApproved: boolean, feedback: string) => {
+  const handleVerificationComplete = async (
+    artworkId: string,
+    isApproved: boolean,
+    feedback: string
+  ) => {
     if (!validatorAddress) {
-      toast.error('Please connect your wallet to validate artwork')
-      return
+      toast.error("Please connect your wallet to validate artwork");
+      return;
     }
 
     try {
-      const artwork = pendingArtworks.find(a => a.id === artworkId)
-      if (!artwork) return
+      const artwork = pendingArtworks.find((a) => a.id === artworkId);
+      if (!artwork) return;
 
       await api.validateArtwork(
         artwork.imageHash,
         isApproved,
         isApproved ? artwork.artist : feedback,
         validatorAddress
-      )
+      );
 
       // Remove the verified artwork from selected and pending lists
-      setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId))
-      setPendingArtworks(pendingArtworks.filter((artwork) => artwork.id !== artworkId))
+      setSelectedArtworks(selectedArtworks.filter((id) => id !== artworkId));
+      setPendingArtworks(
+        pendingArtworks.filter((artwork) => artwork.id !== artworkId)
+      );
 
       // If there are more selected artworks, continue to the next one
-      const remainingSelected = selectedArtworks.filter((id) => id !== artworkId)
+      const remainingSelected = selectedArtworks.filter(
+        (id) => id !== artworkId
+      );
       if (remainingSelected.length > 0) {
-        const nextArtwork = pendingArtworks.find((artwork) => artwork.id === remainingSelected[0])
+        const nextArtwork = pendingArtworks.find(
+          (artwork) => artwork.id === remainingSelected[0]
+        );
         if (nextArtwork) {
-          setSelectedArtwork(nextArtwork)
+          setSelectedArtwork(nextArtwork);
         } else {
-          setIsVerifying(false)
-          setSelectedArtwork(null)
+          setIsVerifying(false);
+          setSelectedArtwork(null);
         }
       } else {
         setIsVerifying(false);
         setSelectedArtwork(null);
       }
       // Refresh the artwork list
-      await fetchArtworks()
-      toast.success('Artwork validated successfully')
+      await fetchArtworks();
+      toast.success("Artwork validated successfully");
     } catch (err) {
-      console.error('Error validating artwork:', err)
+      console.error("Error validating artwork:", err);
       if (err instanceof ValidationError) {
-        if (err.code === 'ALREADY_VOTED') {
-          toast.error('You have already validated this artwork')
+        if (err.code === "ALREADY_VOTED") {
+          toast.error("You have already validated this artwork");
         } else {
-          toast.error(err.message)
+          toast.error(err.message);
         }
       } else {
-        toast.error('Failed to validate artwork. Please try again.')
+        toast.error("Failed to validate artwork. Please try again.");
       }
     }
   };
@@ -344,7 +368,9 @@ export default function VerifyQueuePage() {
           ) : filteredArtworks.length === 0 ? (
             <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-900">
               <p className="text-gray-500">
-                {pendingArtworks.length === 0 ? "No artworks available for verification" : "No artworks match your filters"}
+                {pendingArtworks.length === 0
+                  ? "No artworks available for verification"
+                  : "No artworks match your filters"}
               </p>
             </div>
           ) : (
@@ -371,9 +397,6 @@ export default function VerifyQueuePage() {
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium">
                         Artist
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">
-                        Medium
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium">
                         Submitted
@@ -421,28 +444,36 @@ export default function VerifyQueuePage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm">{artwork.artist}</td>
-                        <td className="px-4 py-3 text-sm">{artwork?.medium}</td>
                         <td className="px-4 py-3 text-sm">
                           {formatDate(artwork.dateSubmitted)}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 flex items-center gap-1">
+                          <Badge
+                            className={`flex items-center gap-1 ${
+                              artwork.status === "validated"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 "
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 "
+                            }`}
+                          >
                             <Clock className="h-3 w-3" />
-                            Pending
+                            {artwork.status.charAt(0).toUpperCase() +
+                              artwork.status.slice(1)}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <Button
-                            size="sm"
-                            className="bg-teal-600 hover:bg-teal-700"
-                            onClick={() => {
-                              setSelectedArtwork(artwork);
-                              setIsVerifying(true);
-                            }}
-                          >
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            Verify
-                          </Button>
+                          {artwork.status !== "validated" && (
+                            <Button
+                              size="sm"
+                              className="bg-teal-600 hover:bg-teal-700"
+                              onClick={() => {
+                                setSelectedArtwork(artwork);
+                                setIsVerifying(true);
+                              }}
+                            >
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              Verify
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}
