@@ -57,8 +57,8 @@ export function VerificationProcess({
   currentIndex,
 }: VerificationProcessProps) {
   const [step, setStep] = useState<
-    "analyzing" | "results" | "decision" | "success"
-  >("analyzing");
+    "analyzing" | "results" | "decision" | "success" | "import-model"
+  >("import-model");
   const [validationDecision, setValidationDecision] = useState<
     "approve" | "reject" | null
   >(null);
@@ -234,6 +234,40 @@ export function VerificationProcess({
 
   const renderStepContent = () => {
     switch (step) {
+      case "import-model":
+        return (
+          <div className="py-6 space-y-8">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
+                <Brain className="h-5 w-5 text-teal-600" />
+                Configure AI Model
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Provide the URL of the AI model to be used for artwork analysis.
+              </p>
+              <input
+                type="text"
+                placeholder="Enter model URL (e.g., https://example.com/model)"
+                className="block w-full text-sm text-gray-600 dark:text-gray-400 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                onChange={(e) => {
+                  const url = e.target.value;
+                  console.log("Entered model URL:", url);
+                  // Handle URL input logic here
+                }}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setStep("analyzing")}
+                className="bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
+              >
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        );
+
       case "analyzing":
         const CurrentIcon = getCurrentStageIcon();
         return (
