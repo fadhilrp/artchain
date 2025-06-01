@@ -17,6 +17,15 @@ export interface Artwork {
   requiredValidators: number;
   originalAuthor: string;
   timestamp?: string; // Optional timestamp from backend
+  createdAt?: string; // Creation timestamp
+  
+  // IPFS fields
+  imageUris?: string[]; // Array of IPFS image URIs
+  metadataUri?: string; // IPFS metadata URI
+  
+  // Additional fields for backward compatibility
+  year?: string;
+  dimensions?: string;
 }
 
 export class ValidationError extends Error {
@@ -29,7 +38,7 @@ export class ValidationError extends Error {
 export const api = {
   // Get all artworks
   getArtworks: async (): Promise<Artwork[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/artworks`);
+    const response = await fetch(`${API_BASE_URL}/artworks`);
     if (!response.ok) {
       throw new Error("Failed to fetch artworks");
     }

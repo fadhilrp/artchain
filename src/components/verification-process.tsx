@@ -232,6 +232,13 @@ export function VerificationProcess({
     return currentStageData?.description || "Processing...";
   };
 
+  const ipfsToHttp = (uri: string): string => {
+    if (uri.startsWith("ipfs://")) {
+      return uri.replace("ipfs://", "https://ipfs.io/ipfs/");
+    }
+    return uri;
+  };
+
   const renderStepContent = () => {
     switch (step) {
       case "analyzing":
@@ -396,14 +403,33 @@ export function VerificationProcess({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                      <div
-                        className="h-full w-full object-cover"
-                        style={{
-                          backgroundColor: `#${Math.floor(
-                            Math.random() * 16777215
-                          ).toString(16)}`,
-                        }}
-                      ></div>
+                      {artwork?.images && artwork.images.length > 0 ? (
+                        <img
+                          src={artwork.images[0].startsWith('ipfs://') ? ipfsToHttp(artwork.images[0]) : artwork.images[0]}
+                          alt={artwork?.title || 'Artwork'}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // Fallback to placeholder if image fails to load
+                            (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+                          }}
+                        />
+                      ) : artwork?.imageUris && artwork.imageUris.length > 0 ? (
+                        <img
+                          src={ipfsToHttp(artwork.imageUris[0])}
+                          alt={artwork?.title || 'Artwork'}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // Fallback to placeholder if image fails to load
+                            (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="h-full w-full flex items-center justify-center bg-gray-200 dark:bg-gray-700"
+                        >
+                          <span className="text-gray-500 text-sm">No image available</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Enhanced artwork metadata */}
@@ -495,6 +521,38 @@ export function VerificationProcess({
                           </p>
                         </div>
                       )}
+
+                      {/* IPFS Storage Information */}
+                      {(artwork?.imageUris && artwork.imageUris.length > 0) || artwork?.metadataUri ? (
+                        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                            📡 IPFS Storage
+                          </p>
+                          <div className="space-y-2 text-sm">
+                            {artwork?.imageUris && artwork.imageUris.length > 0 && (
+                              <div>
+                                <span className="text-gray-600 dark:text-gray-400">Images: </span>
+                                <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                  {artwork.imageUris.length} file{artwork.imageUris.length > 1 ? 's' : ''} on IPFS
+                                </span>
+                              </div>
+                            )}
+                            {artwork?.metadataUri && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-600 dark:text-gray-400">Metadata: </span>
+                                <a
+                                  href={ipfsToHttp(artwork.metadataUri)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-xs underline"
+                                >
+                                  View on IPFS
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Enhanced validation progress */}
