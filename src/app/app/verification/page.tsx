@@ -9,7 +9,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Filter, Search, Sparkles, ExternalLink, Shield } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Filter,
+  Search,
+  Sparkles,
+  ExternalLink,
+  Shield,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,86 +64,122 @@ export default function VerifyQueuePage() {
   const fetchArtworks = async () => {
     try {
       setIsLoading(true);
-      
+
       // Use the blockchain endpoint that retrieves from smart contract
-      const response = await fetch('http://localhost:3001/api/artworks');
+      const response = await fetch("http://localhost:3001/api/artworks");
       if (!response.ok) {
-        throw new Error('Failed to fetch artworks from blockchain');
+        throw new Error("Failed to fetch artworks from blockchain");
       }
-      
+
       const blockchainResponse = await response.json();
-      console.log('Fetched response from blockchain:', blockchainResponse);
-      
+      console.log("Fetched response from blockchain:", blockchainResponse);
+
       // Handle different response formats (IPFS-enabled vs legacy)
-      const blockchainArtworks = blockchainResponse.artworks || blockchainResponse;
-      const isIPFSEnabled = blockchainResponse.source === 'ipfs-blockchain';
-      
-      console.log(`Using ${isIPFSEnabled ? 'IPFS-enabled' : 'legacy'} blockchain integration`);
-      console.log('Raw blockchain artworks:', blockchainArtworks);
-      
+      const blockchainArtworks =
+        blockchainResponse.artworks || blockchainResponse;
+      const isIPFSEnabled = blockchainResponse.source === "ipfs-blockchain";
+
+      console.log(
+        `Using ${
+          isIPFSEnabled ? "IPFS-enabled" : "legacy"
+        } blockchain integration`
+      );
+      console.log("Raw blockchain artworks:", blockchainArtworks);
+
       // Also get database artworks for additional metadata if not using IPFS contract
       let dbArtworks: Artwork[] = [];
       if (!isIPFSEnabled) {
         dbArtworks = await api.getArtworks();
       }
-      
-      // Transform and merge blockchain data with database metadata
-      const transformedArtworks: Artwork[] = blockchainArtworks.map((blockchainArt: any) => {
-        // Find matching database entry by imageHash (only needed for legacy)
-        const dbArt = dbArtworks.find(db => db.imageHash === blockchainArt.imageHash);
-        
-        // Use IPFS images - priority: blockchain IPFS URIs > database IPFS URIs > placeholder
-        let images = ["/placeholder.svg?height=400&width=400"];
-        
-        if (blockchainArt.ipfsImageUris && blockchainArt.ipfsImageUris.length > 0) {
-          // IPFS-enabled contract has the URIs directly
-          images = blockchainArt.ipfsImageUris.map((uri: string) => ipfsToHttp(uri));
-        } else if (dbArt?.imageUris && dbArt.imageUris.length > 0) {
-          // Legacy: get from database
-          images = dbArt.imageUris.map((uri: string) => ipfsToHttp(uri));
-        }
 
-        return {
-          // Use blockchain as source of truth for validation status
-          id: blockchainArt.imageHash,
-          imageHash: blockchainArt.imageHash,
-          artist: blockchainArt.artist || dbArt?.artist || 'Unknown Artist',
-          title: blockchainArt.title || dbArt?.title || `Artwork ${blockchainArt.imageHash.slice(0, 8)}...`,
-          status: blockchainArt.validated ? "validated" : ("pending" as const),
-          dateSubmitted: blockchainArt.timestamp || dbArt?.timestamp || new Date().toISOString(),
-          images: images,
-          description: blockchainArt.description || dbArt?.description || `Blockchain Status: ${
-            blockchainArt.validated ? "Validated" : "Pending Validation"
-          }\nConsensus: ${blockchainArt.consensusCount}/${blockchainArt.requiredValidators}\nOriginal: ${blockchainArt.isOriginal ? "Yes" : "No"}`,
-          additionalInfo: blockchainArt.additionalInfo || dbArt?.additionalInfo || `Original Author: ${blockchainArt.originalAuthor || 'Unknown'}`,
-          medium: blockchainArt.medium || dbArt?.medium || "Digital Art",
-          
-          // Blockchain validation data (source of truth)
-          consensusCount: Number(blockchainArt.consensusCount) || 0,
-          requiredValidators: Number(blockchainArt.requiredValidators) || 2,
-          isOriginal: blockchainArt.isOriginal || false,
-          validated: blockchainArt.validated || false,
-          originalAuthor: blockchainArt.originalAuthor || 'Unknown',
-          
-          // IPFS-specific fields from blockchain (preferred) or database fallback
-          imageUris: blockchainArt.ipfsImageUris || dbArt?.imageUris || [],
-          metadataUri: blockchainArt.ipfsMetadataUri || dbArt?.metadataUri,
-          
-          // Additional metadata
-          year: blockchainArt.year || dbArt?.year,
-          dimensions: blockchainArt.dimensions || dbArt?.dimensions,
-          createdAt: dbArt?.createdAt,
-          timestamp: blockchainArt.timestamp
-        };
-      });
-      
+      // Transform and merge blockchain data with database metadata
+      const transformedArtworks: Artwork[] = blockchainArtworks.map(
+        (blockchainArt: any) => {
+          // Find matching database entry by imageHash (only needed for legacy)
+          const dbArt = dbArtworks.find(
+            (db) => db.imageHash === blockchainArt.imageHash
+          );
+
+          // Use IPFS images - priority: blockchain IPFS URIs > database IPFS URIs > placeholder
+          let images = ["/placeholder.svg?height=400&width=400"];
+
+          if (
+            blockchainArt.ipfsImageUris &&
+            blockchainArt.ipfsImageUris.length > 0
+          ) {
+            // IPFS-enabled contract has the URIs directly
+            images = blockchainArt.ipfsImageUris.map((uri: string) =>
+              ipfsToHttp(uri)
+            );
+          } else if (dbArt?.imageUris && dbArt.imageUris.length > 0) {
+            // Legacy: get from database
+            images = dbArt.imageUris.map((uri: string) => ipfsToHttp(uri));
+          }
+
+          return {
+            // Use blockchain as source of truth for validation status
+            id: blockchainArt.imageHash,
+            imageHash: blockchainArt.imageHash,
+            artist: blockchainArt.artist || dbArt?.artist || "Unknown Artist",
+            title:
+              blockchainArt.title ||
+              dbArt?.title ||
+              `Artwork ${blockchainArt.imageHash.slice(0, 8)}...`,
+            status: blockchainArt.validated
+              ? "validated"
+              : ("pending" as const),
+            dateSubmitted:
+              blockchainArt.timestamp ||
+              dbArt?.timestamp ||
+              new Date().toISOString(),
+            images: images,
+            description:
+              blockchainArt.description ||
+              dbArt?.description ||
+              `Blockchain Status: ${
+                blockchainArt.validated ? "Validated" : "Pending Validation"
+              }\nConsensus: ${blockchainArt.consensusCount}/${
+                blockchainArt.requiredValidators
+              }\nOriginal: ${blockchainArt.isOriginal ? "Yes" : "No"}`,
+            additionalInfo:
+              blockchainArt.additionalInfo ||
+              dbArt?.additionalInfo ||
+              `Original Author: ${blockchainArt.originalAuthor || "Unknown"}`,
+            medium: blockchainArt.medium || dbArt?.medium || "Digital Art",
+
+            // Blockchain validation data (source of truth)
+            consensusCount: Number(blockchainArt.consensusCount) || 0,
+            requiredValidators: Number(blockchainArt.requiredValidators) || 2,
+            isOriginal: blockchainArt.isOriginal || false,
+            validated: blockchainArt.validated || false,
+            originalAuthor: blockchainArt.originalAuthor || "Unknown",
+
+            // IPFS-specific fields from blockchain (preferred) or database fallback
+            imageUris: blockchainArt.ipfsImageUris || dbArt?.imageUris || [],
+            metadataUri: blockchainArt.ipfsMetadataUri || dbArt?.metadataUri,
+
+            // Additional metadata
+            year: blockchainArt.year || dbArt?.year,
+            dimensions: blockchainArt.dimensions || dbArt?.dimensions,
+            createdAt: dbArt?.createdAt,
+            timestamp: blockchainArt.timestamp,
+          };
+        }
+      );
+
       // Filter to show only pending validation artworks
-      const pendingArtworks = transformedArtworks.filter(art => !art.validated);
-      
-      console.log(`Found ${pendingArtworks.length} artworks pending validation from ${isIPFSEnabled ? 'IPFS-enabled' : 'legacy'} blockchain`);
-      
-      setPendingArtworks(pendingArtworks);
-      setFilteredArtworks(pendingArtworks);
+      const pendingArtworks = transformedArtworks.filter(
+        (art) => !art.validated
+      );
+
+      console.log(
+        `Found ${pendingArtworks.length} artworks pending validation from ${
+          isIPFSEnabled ? "IPFS-enabled" : "legacy"
+        } blockchain`
+      );
+
+      setPendingArtworks(transformedArtworks);
+      setFilteredArtworks(transformedArtworks);
     } catch (err) {
       setError("Failed to fetch artworks from blockchain");
       console.error("Error fetching artworks from blockchain:", err);
@@ -305,14 +349,12 @@ export default function VerifyQueuePage() {
             Review and verify artworks retrieved from blockchain smart contract
           </p>
         </div>
-        {!validatorAddress && (
-          <div className="flex flex-col items-end space-y-2">
-            <ConnectButton />
-            <p className="text-sm text-gray-500">
-              Connect wallet to validate artworks
-            </p>
-          </div>
-        )}
+        <div className="flex flex-col items-end space-y-2">
+          <ConnectButton />
+          <p className="text-sm text-gray-500">
+            Connect wallet to validate artworks
+          </p>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -440,7 +482,8 @@ export default function VerifyQueuePage() {
                   className="w-full h-48 object-cover rounded-t-lg"
                   onError={(e) => {
                     // Fallback to placeholder if IPFS image fails to load
-                    (e.target as HTMLImageElement).src = "/placeholder.svg?height=400&width=400";
+                    (e.target as HTMLImageElement).src =
+                      "/placeholder.svg?height=400&width=400";
                   }}
                 />
                 <div className="absolute top-2 left-2">
@@ -528,30 +571,6 @@ export default function VerifyQueuePage() {
             <p className="text-gray-500">
               No artworks found matching your criteria.
             </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Information about decentralized process */}
-      {!isLoading && (
-        <Card className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/20 dark:to-teal-950/20 border-blue-200 dark:border-blue-800">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <Shield className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  Decentralized Validation Process
-                </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                  Artworks are retrieved directly from the blockchain smart contract using <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">getTotalArtworks()</code> and <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">getArtworkHash()</code> functions.
-                </p>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  During validation, you'll connect to your local VLM (Vision Language Model) to ensure complete privacy and decentralized processing.
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       )}
